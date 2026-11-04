@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#14171a">
+<title>ÇELİK CEPHE — Birleşik Muharebe</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap">
+<style>
+:root{--ink:#14171a;--paper:#ece7d8;--muted:#a3a59a;--signal:#f2c14e;--line:rgba(236,231,216,.18);color-scheme:dark;font-family:"DM Mono",ui-monospace,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--ink);color:var(--paper);overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#hud{z-index:2}
+.btns{position:fixed;z-index:4;top:calc(10px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));display:flex;gap:8px}
+.btns button{width:42px;height:42px;border:1px solid var(--line);background:rgba(20,23,26,.6);color:var(--paper);font:700 15px "DM Mono",monospace;cursor:pointer}
+.screen{position:fixed;z-index:6;inset:0;display:flex;align-items:center;padding:calc(18px + env(safe-area-inset-top,0px)) calc(18px + env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) calc(18px + env(safe-area-inset-left,0px))}
+.screen.hidden{display:none}
+.screen.dim{background:rgba(10,12,14,.55);backdrop-filter:blur(4px);justify-content:center}
+#menu{background:linear-gradient(90deg,rgba(12,14,16,.88) 0,rgba(12,14,16,.55) 420px,rgba(12,14,16,0) 760px)}
+.panel{position:relative;width:min(470px,100%);max-height:100%;overflow:auto;padding:26px 28px 22px;background:rgba(24,28,31,.92);border:1px solid rgba(236,231,216,.2);box-shadow:10px 10px 0 rgba(0,0,0,.25)}
+.panel::before{content:"";position:absolute;top:-1px;left:-1px;width:64px;height:3px;background:var(--signal)}
+.eyebrow{color:var(--signal);font-size:10px;letter-spacing:.2em}
+h1,h2{margin:10px 0 8px;font:900 50px/.86 "Barlow Condensed",sans-serif;letter-spacing:.01em}
+h1 span,h2 span{color:var(--signal)}
+p{margin:0;color:#b9baae;font-size:11px;line-height:1.75}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.lineup .card{cursor:default}
+.card{position:relative;text-align:left;padding:12px 12px 10px;background:rgba(236,231,216,.04);border:1px solid var(--line);color:var(--paper);cursor:pointer;font:inherit}
+.card.on{border-color:var(--signal);background:rgba(242,193,78,.1)}
+.card.used{opacity:.35;pointer-events:none}
+.card b{display:block;font:800 22px/1 "Barlow Condensed",sans-serif;letter-spacing:.02em}
+.card small{display:block;margin-top:3px;color:var(--muted);font-size:9px;letter-spacing:.08em}
+.card .st{margin-top:9px;display:grid;gap:4px;font-size:9px;color:#c9c9bd}
+.card .st i{display:block;height:3px;background:rgba(236,231,216,.15);margin-top:2px}
+.card .st i::after{content:"";display:block;height:100%;width:var(--w);background:var(--signal)}
+.row{display:flex;gap:8px;align-items:center;margin-top:14px;font-size:10px;color:var(--muted)}
+.row button{padding:6px 10px;border:1px solid var(--line);background:transparent;color:var(--paper);font:500 10px "DM Mono",monospace;cursor:pointer}
+.row button.on{border-color:var(--signal);color:var(--signal)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:7px 14px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:9.5px}
+.controls div{display:flex;gap:7px;align-items:center}
+kbd{min-width:38px;padding:4px 5px;border:1px solid rgba(236,231,216,.22);color:var(--paper);text-align:center;font:9.5px "DM Mono",monospace}
+.go{width:100%;margin-top:18px;padding:14px;border:0;color:var(--ink);background:var(--signal);font:800 18px "Barlow Condensed",sans-serif;letter-spacing:.12em;cursor:pointer}
+.go.sec{background:transparent;color:var(--paper);border:1px solid var(--line);margin-top:8px;font-size:15px;padding:10px}
+.go:disabled{opacity:.4;cursor:default}
+#load{justify-content:center;background:var(--ink)}
+.ld{width:min(360px,80vw)}
+.bar{height:3px;background:rgba(236,231,216,.15);margin:14px 0 10px}.bar i{display:block;height:100%;width:0;background:var(--signal);transition:width .2s}
+#ltxt{font-size:10px;color:var(--muted);letter-spacing:.08em;line-height:1.6}
+.stats{display:grid;grid-template-columns:1fr auto;gap:6px 18px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:11px}
+.stats span:nth-child(2n){color:var(--signal);text-align:right}
+.touchonly{display:none}.touch .touchonly{display:block}.touch .desk{display:none}
+@media (max-height:520px){h1,h2{font-size:38px}.panel{padding:18px 20px}.controls{display:none}}
+</style></head>
+<body>
+<canvas id="gl"></canvas><canvas id="hud"></canvas>
+<div class="btns"><button id="fs" title="Tam ekran">⛶</button><button id="pz" title="Duraklat">II</button></div>
+
+<div class="screen" id="load"><div class="ld">
+<div class="eyebrow">ÇELİK CEPHE · BİRLEŞİK MUHAREBE</div>
+<div class="bar"><i id="lbar"></i></div><div id="ltxt">Hangar hazırlanıyor…</div></div></div>
+
+<div class="screen hidden" id="menu"><div class="panel">
+<div class="eyebrow">KARA + HAVA · HAKİMİYET · 6'YA 6</div>
+<h1>ÇELİK<br><span>CEPHE</span></h1>
+<p>Kara kuvvetleriyle noktaları tut, düşmanı imha ederek spawn puanı (SP) kazan, yeterli SP biriktiğinde taarruz uçağıyla gökyüzüne çık. Düşman da hava desteği çağırır — Bradley'nin 25 mm topu uçaksavar olarak iş görür.</p>
+<div class="cards lineup">
+<div class="card on"><b>M1A2</b><small>ANA MUHAREBE TANKI</small><small style="color:#f2c14e">İLK ARAÇ ÜCRETSİZ · 240 SP</small></div>
+<div class="card on"><b>M2A3</b><small>PİYADE SAVAŞ ARACI</small><small style="color:#f2c14e">150 SP · TOW + UÇAKSAVAR</small></div>
+<div class="card on"><b>A-10A</b><small>TAARRUZ UÇAĞI</small><small style="color:#f2c14e">420 SP · GAU-8, ROKET, BOMBA</small></div>
+</div>
+<div class="row">MOD <button data-m="ab">ARCADE</button><button data-m="rb">GERÇEKÇİ</button></div>
+<p id="mdesc" style="margin-top:6px;font-size:10px"></p>
+<div class="row">GRAFİK <button data-q="high">YÜKSEK</button><button data-q="low">DÜŞÜK</button> &nbsp; MÜRETTEBAT SESİ <button data-vo="1">AÇIK</button><button data-vo="0">KAPALI</button></div>
+<div class="controls desk">
+<div><kbd>W S A D</kbd>Tank: sür</div><div><kbd>FARE</kbd>Nişan / uçuş yönü</div>
+<div><kbd>SOL TIK</kbd>Ateş / uçak topu</div><div><kbd>SAĞ TIK</kbd>Nişangâh / zoom</div>
+<div><kbd>1 2 3</kbd>Mühimmat</div><div><kbd>R</kbd>Hızlı doldur / roket</div>
+<div><kbd>SPACE</kbd>Ateş / bomba</div><div><kbd>W S</kbd>Uçak: gaz</div>
+<div><kbd>X</kbd>Onarım</div><div><kbd>F</kbd>Yangın söndür</div>
+<div><kbd>J</kbd>Araçtan ayrıl</div><div><kbd>TAB</kbd>Skor tablosu</div></div>
+<p class="touchonly" style="margin-top:12px;font-size:10px">Tablet: cihazı yatay tut. Sol başparmakla sür (uçakta gaz + yatış), sağ yarıyı kaydırarak nişan al.</p>
+<button class="go" id="go">MUHAREBEYE KATIL &nbsp;→</button></div></div>
+
+<div class="screen dim hidden" id="pause"><div class="panel">
+<div class="eyebrow">DURAKLATILDI</div><h2>MUHAREBE<br><span>BEKLEMEDE</span></h2>
+<p>Birlikler emir bekliyor, komutan.</p>
+<button class="go" id="resume">DEVAM ET &nbsp;→</button><button class="go sec" id="quit">ANA MENÜYE DÖN</button></div></div>
+
+<div class="screen dim hidden" id="spawn"><div class="panel">
+<div class="eyebrow" id="seb">MUHAREBE BAŞLIYOR</div><h2 id="sh">ARAÇ<br><span>SEÇ</span></h2>
+<p id="ssp" style="color:#f2c14e;font-size:14px;font-weight:500"></p><p id="stx"></p>
+<div class="cards" id="scards"></div>
+<button class="go" id="sgo" disabled>SAHAYA ÇIK &nbsp;→</button><button class="go sec" id="sleave" style="display:none">MUHAREBEDEN AYRIL</button></div></div>
+
+<div class="screen dim hidden" id="end"><div class="panel">
+<div class="eyebrow" id="eeb">MUHAREBE SONA ERDİ</div><h2 id="eh">ZAFER</h2>
+<p id="etx"></p><div class="stats" id="est"></div>
+<button class="go" id="again">YENİ MUHAREBE &nbsp;→</button></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/game.js"></script>
+</body></html>
