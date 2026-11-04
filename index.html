@@ -49,6 +49,43 @@ kbd{min-width:38px;padding:4px 5px;border:1px solid rgba(236,231,216,.22);color:
 .stats span:nth-child(2n){color:var(--signal);text-align:right}
 .touchonly{display:none}.touch .touchonly{display:block}.touch .desk{display:none}
 @media (max-height:520px){h1,h2{font-size:38px}.panel{padding:18px 20px}.controls{display:none}}
+
+/* ---- WT tarzı hangar ---- */
+#menu{background:none;display:block;padding:0}#menu.hidden{display:none}
+.hTop{position:absolute;left:0;right:0;top:0;height:74px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;padding-top:env(safe-area-inset-top,0px);background:linear-gradient(180deg,rgba(8,10,12,.92),rgba(8,10,12,.55) 80%,rgba(8,10,12,0))}
+.hL{display:flex;gap:12px;align-items:center;min-width:220px}.flag{width:44px;height:30px;background:linear-gradient(180deg,#b22234 0 14%,#fff 14% 28%,#b22234 28% 42%,#fff 42% 56%,#b22234 56% 70%,#fff 70% 84%,#b22234 84%);position:relative;border:1px solid rgba(255,255,255,.3);font-size:0}
+.flag::after{content:"";position:absolute;left:0;top:0;width:45%;height:56%;background:#3c3b6e}
+.hL b{display:block;font:800 16px "Barlow Condensed",sans-serif;letter-spacing:.08em}.hL small{color:var(--muted);font-size:10px}.xp{display:block;width:130px;height:3px;background:rgba(255,255,255,.12);margin-top:4px}.xp i{display:block;height:100%;background:var(--signal)}
+.hC{display:flex;flex-direction:column;align-items:center;gap:4px}.hC small{color:var(--muted);font-size:10px;letter-spacing:.08em}
+.modes{display:flex;gap:2px}.modes button,.ib{padding:5px 12px;border:1px solid var(--line);background:rgba(20,23,26,.7);color:var(--paper);font:700 11px "Barlow Condensed",sans-serif;letter-spacing:.1em;cursor:pointer}
+.modes button.on{background:rgba(242,193,78,.2);border-color:var(--signal);color:var(--signal)}
+.battle{padding:10px 64px;border:1px solid #ffd77a;background:linear-gradient(180deg,#f7cf62,#d89a22);color:#1b1408;font:900 26px "Barlow Condensed",sans-serif;letter-spacing:.14em;cursor:pointer;box-shadow:0 0 24px rgba(242,180,60,.35),inset 0 1px 0 rgba(255,255,255,.5)}
+.battle:disabled{filter:grayscale(1);opacity:.5}
+.hR{display:flex;gap:10px;align-items:center;min-width:220px;justify-content:flex-end}.cur{padding:6px 10px;background:rgba(20,23,26,.7);border:1px solid var(--line);font-size:12px}.cur b{font-weight:500}.cur.sl b{color:#e8e2cf}.cur.rp b{color:#7fc8ff}
+.hInfo{position:absolute;left:18px;top:96px;width:270px;padding:14px 16px;background:linear-gradient(90deg,rgba(12,14,16,.85),rgba(12,14,16,.55));border-left:2px solid var(--signal)}
+.hInfo .rk{color:var(--signal);font-size:10px;letter-spacing:.16em}.hInfo h3{margin:4px 0 0;font:900 28px/1 "Barlow Condensed",sans-serif}.hInfo small{color:var(--muted);font-size:9px;letter-spacing:.12em}
+.hInfo .st{display:flex;justify-content:space-between;gap:10px;margin-top:7px;font-size:10px;color:var(--muted);border-top:1px solid rgba(255,255,255,.06);padding-top:6px}.hInfo .st b{color:var(--paper);font-weight:500;text-align:right}
+.hSide{position:absolute;right:18px;top:96px}.tbtn{padding:12px 18px;border:1px solid var(--line);background:rgba(16,19,22,.8);color:var(--paper);font:800 15px "Barlow Condensed",sans-serif;letter-spacing:.12em;cursor:pointer}.tbtn:hover{border-color:var(--signal)}
+.hSlots{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:6px;padding:14px 10px calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(0deg,rgba(8,10,12,.92),rgba(8,10,12,.5) 75%,rgba(8,10,12,0))}
+.slot{position:relative;width:168px;height:104px;background:linear-gradient(180deg,rgba(60,66,72,.6),rgba(20,23,26,.9));border:1px solid rgba(255,255,255,.14);cursor:pointer;overflow:hidden}
+.slot img,.card img,.node img{display:block;width:100%;height:60px;object-fit:cover;opacity:.95}.slot.on{border-color:var(--signal);box-shadow:inset 0 0 0 1px var(--signal),0 0 14px rgba(242,193,78,.25)}
+.slot b{position:absolute;left:8px;bottom:18px;font:800 15px "Barlow Condensed",sans-serif}.slot small{position:absolute;left:8px;bottom:5px;font-size:8px;color:var(--muted);letter-spacing:.08em}
+.slot .br,.node .br{position:absolute;right:6px;top:5px;padding:1px 5px;background:rgba(0,0,0,.6);font-size:10px;color:var(--signal)}
+.slot .sw{position:absolute;right:5px;bottom:5px;width:24px;height:22px;border:1px solid var(--line);background:rgba(0,0,0,.5);color:var(--paper);cursor:pointer}
+.slot.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;border-style:dashed;opacity:.7}.slot.empty b,.slot.empty small{position:static}
+.tree{width:min(980px,96vw);max-height:94vh;overflow:auto;background:rgba(14,16,19,.96);border:1px solid rgba(255,255,255,.14)}
+.tHead{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);font:800 18px "Barlow Condensed",sans-serif;letter-spacing:.1em}.tHead span{font:500 12px "DM Mono",monospace}
+.tGrid{display:grid;grid-template-columns:70px repeat(3,1fr);gap:16px 18px;padding:16px}.th{font:800 12px "Barlow Condensed",sans-serif;letter-spacing:.12em;color:var(--muted);text-align:center}
+.rkc{display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:9px;color:var(--muted)}.rkc b{font:900 22px "Barlow Condensed",sans-serif;color:var(--paper)}
+.node{position:relative;height:104px;background:linear-gradient(180deg,rgba(70,76,82,.5),rgba(20,23,26,.9));border:1px solid rgba(255,255,255,.14);cursor:pointer}
+.node.pre::before{content:"";position:absolute;left:50%;top:-17px;width:2px;height:16px;background:rgba(255,255,255,.25)}
+.node b{position:absolute;left:8px;bottom:18px;font:800 15px "Barlow Condensed",sans-serif}.node small{position:absolute;left:8px;bottom:5px;font-size:9px;color:var(--muted)}
+.node.own{border-color:#6fbf6a}.node.own small{color:#8fe08a}.node.res small{color:#e8e2cf}.node.can small{color:#7fc8ff}.node.lock{opacity:.45;filter:grayscale(.7)}.node.on{box-shadow:0 0 0 2px var(--signal)}
+.tFoot{display:flex;gap:16px;align-items:center;justify-content:space-between;padding:14px 16px;border-top:1px solid var(--line)}.tFoot .go{width:auto;margin:0;padding:12px 26px}
+.tInfo{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:10px;color:var(--muted)}.tInfo b{width:100%;font:800 20px "Barlow Condensed",sans-serif;color:var(--paper)}.tInfo small{width:100%;color:var(--signal)}.tInfo i{font-style:normal;color:var(--paper)}
+#spawn .cards,#pick .cards{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}#spawn .panel,#pick .panel{width:min(720px,100%)}
+@media (max-height:560px){.hInfo{display:none}.slot{width:120px;height:84px}.slot img{height:44px}.battle{padding:6px 34px;font-size:20px}.hTop{height:62px}}
+@media (max-width:760px){.hInfo{display:none}.hR .cur{font-size:10px}.slot{width:104px}.hL{min-width:0}.hL>div:last-child{display:none}}
 </style></head>
 <body>
 <canvas id="gl"></canvas><canvas id="hud"></canvas>
@@ -58,27 +95,26 @@ kbd{min-width:38px;padding:4px 5px;border:1px solid rgba(236,231,216,.22);color:
 <div class="eyebrow">ÇELİK CEPHE · BİRLEŞİK MUHAREBE</div>
 <div class="bar"><i id="lbar"></i></div><div id="ltxt">Hangar hazırlanıyor…</div></div></div>
 
-<div class="screen hidden" id="menu"><div class="panel">
-<div class="eyebrow">KARA + HAVA · HAKİMİYET · 6'YA 6</div>
-<h1>ÇELİK<br><span>CEPHE</span></h1>
-<p>Kara kuvvetleriyle noktaları tut, düşmanı imha ederek spawn puanı (SP) kazan, yeterli SP biriktiğinde taarruz uçağıyla gökyüzüne çık. Düşman da hava desteği çağırır — Bradley'nin 25 mm topu uçaksavar olarak iş görür.</p>
-<div class="cards lineup">
-<div class="card on"><b>M1A2</b><small>ANA MUHAREBE TANKI</small><small style="color:#f2c14e">İLK ARAÇ ÜCRETSİZ · 240 SP</small></div>
-<div class="card on"><b>M2A3</b><small>PİYADE SAVAŞ ARACI</small><small style="color:#f2c14e">150 SP · TOW + UÇAKSAVAR</small></div>
-<div class="card on"><b>A-10A</b><small>TAARRUZ UÇAĞI</small><small style="color:#f2c14e">300 SP · GAU-8, ROKET, BOMBA</small></div>
-</div>
-<div class="row">MOD <button data-m="ab">ARCADE</button><button data-m="rb">GERÇEKÇİ</button></div>
-<p id="mdesc" style="margin-top:6px;font-size:10px"></p>
-<div class="row">GRAFİK <button data-q="high">YÜKSEK</button><button data-q="low">DÜŞÜK</button> &nbsp; MÜRETTEBAT SESİ <button data-vo="1">AÇIK</button><button data-vo="0">KAPALI</button></div>
+<div class="screen hidden" id="menu">
+<div class="hTop"><div class="hL"><div class="flag">ABD</div><div><b>ÇELİK CEPHE · ABD</b><small id="hLvl">Seviye 1</small><i class="xp"><i id="hXp"></i></i></div></div>
+<div class="hC"><div class="modes"><button data-m="ab">ARCADE</button><button data-m="rb">GERÇEKÇİ</button></div><button class="battle" id="go">SAVAŞA!</button><small id="hBR"></small></div>
+<div class="hR"><span class="cur sl">SL <b id="hSL">0</b></span><span class="cur rp">RP <b id="hRP">0</b></span><button class="ib" id="hOpt" title="Ayarlar">⚙</button></div></div>
+<div class="hInfo" id="hInfo"></div><div class="hSide"><button class="tbtn" id="hTree">ARAŞTIRMA AĞACI</button></div><div class="hSlots" id="hSlots"></div></div>
+
+<div class="screen dim hidden" id="tree"><div class="tree"><div class="tHead"><b>ARAŞTIRMA AĞACI · ABD</b><span>SL <b id="tSL"></b> · RP <b id="tRP"></b> &nbsp;<button class="ib" id="tClose">✕</button></span></div><div class="tGrid" id="tGrid"></div><div class="tFoot" id="tFoot"></div></div></div>
+<div class="screen dim hidden" id="pick"><div class="panel"><div class="eyebrow">KADRO YUVASI</div><h2>ARAÇ<br><span>SEÇ</span></h2><div class="cards" id="pCards"></div><button class="go sec" id="pClose">VAZGEÇ</button></div></div>
+<div class="screen dim hidden" id="opts"><div class="panel"><div class="eyebrow">AYARLAR</div><h2>AYAR<span>LAR</span></h2>
+<div class="row">GRAFİK <button data-q="high">YÜKSEK</button><button data-q="low">DÜŞÜK</button></div>
+<div class="row">MÜRETTEBAT SESİ <button data-vo="1">AÇIK</button><button data-vo="0">KAPALI</button></div>
 <div class="controls desk">
 <div><kbd>W S A D</kbd>Tank: sür</div><div><kbd>FARE</kbd>Nişan / uçuş yönü</div>
 <div><kbd>SOL TIK</kbd>Ateş / uçak topu</div><div><kbd>SAĞ TIK</kbd>Nişangâh / zoom</div>
 <div><kbd>1 2 3</kbd>Mühimmat</div><div><kbd>R</kbd>Hızlı doldur / roket</div>
-<div><kbd>SPACE</kbd>Ateş / bomba</div><div><kbd>W S</kbd>Uçak: gaz</div>
+<div><kbd>SPACE</kbd>Ateş / bomba</div><div><kbd>Q</kbd>Maverick (A-10C)</div>
 <div><kbd>X</kbd>Onarım</div><div><kbd>F</kbd>Yangın söndür</div>
 <div><kbd>J</kbd>Araçtan ayrıl</div><div><kbd>TAB</kbd>Skor tablosu</div></div>
-<p class="touchonly" style="margin-top:12px;font-size:10px">Tablet: cihazı yatay tut. Sol başparmakla sür (uçakta gaz + yatış), sağ yarıyı kaydırarak nişan al.</p>
-<button class="go" id="go">MUHAREBEYE KATIL &nbsp;→</button></div></div>
+<p class="touchonly" style="margin-top:12px;font-size:10px">Tablet: sol başparmak sürüş (uçakta gaz + yatış), sağ yarı nişan.</p>
+<button class="go" id="oClose">KAPAT</button></div></div>
 
 <div class="screen dim hidden" id="pause"><div class="panel">
 <div class="eyebrow">DURAKLATILDI</div><h2>MUHAREBE<br><span>BEKLEMEDE</span></h2>
