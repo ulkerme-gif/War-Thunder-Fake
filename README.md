@@ -18,6 +18,16 @@ War Thunder tarzı tarayıcı oyunu (three.js r128). Hangar, araştırma ağacı
 
 Araştırma RP, satın alma SL ister; ikisi de muharebe sonunda puanına göre kazanılır. Rakipler kadronun en yüksek BR'sine göre eşleşir.
 
+## Almanya
+| Rank | Tank | Uçak |
+|---|---|---|
+| II | Pz.Kpfw. III Ausf. J (3.0) — 5 cm KwK 39 L/60, PzGr 39 / PzGr 40 | Ju 87 G-2 Stuka (3.7) — 2× BK 3,7 cm tanksavar topu, otomatik arka nişancı |
+
+ABD ağacına ayrıca **Spitfire Mk Vb** (3.7) avcı uçağı eklendi. Hangarın sol üstündeki ABD / ALMANYA düğmeleriyle ulus değiştirilir; her ulusun kendi kadrosu ve ağacı vardır.
+
+## Hava muharebesi
+Hangarda **HAVA MUHAREBESİ** seçilince 6'ya 6 it dalaşı başlar. Kadrondaki uçaklarla sınırsız doğarsın; düşman uçaklarını düşürerek biletlerini eritirsin. Rakipler seçili uçağın BR'sine göre eşleşir (ör. Spitfire ↔ Ju 87).
+
 ## Muharebe
 - 1,6 km'lik muharebe alanı, ufukta dağlar, nehir (sığ geçitler, suda tanklar yavaşlar), köyler ve kasaba.
 - SP: ilk kara aracı ücretsiz; imha, isabet ve nokta ele geçirme SP kazandırır. Uçak SP ister. Düşman da Su-25 çağırır.
