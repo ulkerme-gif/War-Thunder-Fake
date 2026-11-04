@@ -7,7 +7,7 @@ War Thunder tarzı tarayıcı oyunu (three.js r128). 6'ya 6 hakimiyet muharebesi
 |---|---|---|
 | M1A2 Abrams | Ana muharebe tankı (120 mm, APFSDS / HEAT-FS) | İlk kara aracı ücretsiz, sonra 240 SP |
 | M2A3 Bradley | 25 mm M242 + TOW-2, uçaksavar görevi | İlk kara aracı ücretsiz, sonra 150 SP |
-| A-10A | Taarruz uçağı: GAU-8, 14 roket, 6 bomba | 420 SP |
+| A-10A | Taarruz uçağı: GAU-8, 14 roket, 6 bomba | 300 SP |
 
 SP kazanımı: imha +160 · uçak düşürme +200 · nokta +120 · asist +60 · delici isabet +15. Her araç muharebede bir kez kullanılır. Düşman takımı da SP biriktirip Su-25 taarruz uçağı çağırır.
 
