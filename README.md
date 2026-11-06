@@ -28,6 +28,11 @@ ABD ağacına ayrıca **Spitfire Mk Vb** (3.7) avcı uçağı eklendi. Hangarın
 ## Hava muharebesi
 Hangarda **HAVA MUHAREBESİ** seçilince 6'ya 6 it dalaşı başlar. Kadrondaki uçaklarla sınırsız doğarsın; düşman uçaklarını düşürerek biletlerini eritirsin. Rakipler seçili uçağın BR'sine göre eşleşir (ör. Spitfire ↔ Ju 87).
 
+## Uçuş fiziği (GökSim motoru)
+Uçaklar GökSim'in 6 serbestlik dereceli uçuş modeliyle uçar: kaldırma/sürükleme/itki/yerçekimi gerçek kuvvetlerdir, perdövites (stall) eğrisi vardır, kumanda yüzeylerinin etkisi dinamik basınçla ölçeklenir. War Thunder tarzı fare-nişan eğitmeni farenin gösterdiği yönü irtifa dümeni, kanatçık ve istikamet dümenine çevirir; hücum açısı ve G sınırlayıcısı uçağı perdövitesten korur. Uçak verileri `js/game.js` içindeki `AERO` tablosundadır (kütle, kanat alanı, CL/CD katsayıları, motor itkisi, kumanda yetkileri).
+
+Hava muharebesi sahası 6,4 × 6,4 km'dir (kara savaşında uçaklar için 2,5 km).
+
 ## Çok oyunculu (arkadaşlarla, en fazla 12 kişi)
 Rocket Arena 3D ile aynı mantık: sunucu yok, **odayı kuranın tarayıcısı sunucu olur** (PeerJS / WebRTC).
 1. Hangarda **ÇOK OYUNCULU** → adını yaz → **TANK vs TANK** ya da **UÇAK vs UÇAK** seç → **ODA KUR**.
