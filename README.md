@@ -28,6 +28,17 @@ ABD ağacına ayrıca **Spitfire Mk Vb** (3.7) avcı uçağı eklendi. Hangarın
 ## Hava muharebesi
 Hangarda **HAVA MUHAREBESİ** seçilince 6'ya 6 it dalaşı başlar. Kadrondaki uçaklarla sınırsız doğarsın; düşman uçaklarını düşürerek biletlerini eritirsin. Rakipler seçili uçağın BR'sine göre eşleşir (ör. Spitfire ↔ Ju 87).
 
+## Çok oyunculu (arkadaşlarla, en fazla 12 kişi)
+Rocket Arena 3D ile aynı mantık: sunucu yok, **odayı kuranın tarayıcısı sunucu olur** (PeerJS / WebRTC).
+1. Hangarda **ÇOK OYUNCULU** → adını yaz → **TANK vs TANK** ya da **UÇAK vs UÇAK** seç → **ODA KUR**.
+2. 4 karakterlik oda kodunu (veya **DAVET BAĞLANTISINI KOPYALA**) arkadaşlarına gönder; onlar kodu yazıp **KATIL**'a basar.
+3. Misafirler **TAKIM DEĞİŞTİR** ile Mavi/Kızıl arasında geçer; boş yerler istenirse botla dolar. Odayı kuran **MUHAREBEYİ BAŞLAT**'a basar.
+4. Herkes kendi hangar kadrosundaki araçlarla sınırsız doğar; biletler biten takım kaybeder.
+
+Notlar:
+- Odayı kuranın oyun sekmesi muharebe boyunca **açık ve önde** kalmalı (arka plana alınan sekmeyi tarayıcı yavaşlatır). En güçlü cihaz oda kursun.
+- Farklı evlerden bağlanırken doğrudan bağlantı kurulamazsa `js/game.js` içindeki `const TURN={server:'',username:'',password:''}` satırına expressturn.com bilgilerini yaz (Rocket Arena'dakiyle aynı bilgiler çalışır).
+
 ## Muharebe
 - 1,6 km'lik muharebe alanı, ufukta dağlar, nehir (sığ geçitler, suda tanklar yavaşlar), köyler ve kasaba.
 - SP: ilk kara aracı ücretsiz; imha, isabet ve nokta ele geçirme SP kazandırır. Uçak SP ister. Düşman da Su-25 çağırır.

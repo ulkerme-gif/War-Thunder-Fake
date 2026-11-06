@@ -75,6 +75,10 @@ kbd{min-width:38px;padding:4px 5px;border:1px solid rgba(236,231,216,.22);color:
 .slot .br,.node .br{position:absolute;right:6px;top:5px;padding:1px 5px;background:rgba(0,0,0,.6);font-size:10px;color:var(--signal)}
 .slot .sw{position:absolute;right:5px;bottom:5px;width:24px;height:22px;border:1px solid var(--line);background:rgba(0,0,0,.5);color:var(--paper);cursor:pointer}
 .slot.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;border-style:dashed;opacity:.7}.slot.empty b,.slot.empty small{position:static}
+.mpb{margin-top:8px}.mpIn{flex:1;padding:8px 10px;background:rgba(0,0,0,.35);border:1px solid var(--line);color:var(--paper);font:500 13px "DM Mono",monospace;letter-spacing:.1em}
+.mpCode{margin-top:14px;padding:10px 14px;border:1px solid var(--signal);background:rgba(242,193,78,.08)}.mpCode small{display:block;color:var(--muted);font-size:9px;letter-spacing:.2em}.mpCode b{font:900 42px/1 "Barlow Condensed",sans-serif;letter-spacing:.3em;color:var(--signal)}
+.mpList{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.mpT{padding:8px 10px;background:rgba(0,0,0,.25);border-top:2px solid #5fb0ff;font-size:11px}.mpT.red{border-top-color:#ff5a4a}.mpT b{display:block;font:800 13px "Barlow Condensed",sans-serif;letter-spacing:.1em;margin-bottom:6px}.mpT span{display:block;padding:2px 0}
+.row button:disabled{opacity:.45;cursor:default}
 .tree{width:min(980px,96vw);max-height:94vh;overflow:auto;background:rgba(14,16,19,.96);border:1px solid rgba(255,255,255,.14)}
 .tHead{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);font:800 18px "Barlow Condensed",sans-serif;letter-spacing:.1em}.tHead span{font:500 12px "DM Mono",monospace}
 .tGrid{display:grid;grid-template-columns:70px repeat(3,1fr);gap:16px 18px;padding:16px}.th{font:800 12px "Barlow Condensed",sans-serif;letter-spacing:.12em;color:var(--muted);text-align:center}
@@ -101,10 +105,21 @@ kbd{min-width:38px;padding:4px 5px;border:1px solid rgba(236,231,216,.22);color:
 <div class="hTop"><div class="hL"><div class="flag us" id="hFlag"></div><div><div class="nats"><button data-n="us">ABD</button><button data-n="de">ALMANYA</button></div><b id="hNat">ÇELİK CEPHE · ABD</b><small id="hLvl">Seviye 1</small><i class="xp"><i id="hXp"></i></i></div></div>
 <div class="hC"><div class="modes"><button data-bt="ground">KARA + HAVA</button><button data-bt="air">HAVA MUHAREBESİ</button></div><div class="modes"><button data-m="ab">ARCADE</button><button data-m="rb">GERÇEKÇİ</button></div><button class="battle" id="go">SAVAŞA!</button><small id="hBR"></small></div>
 <div class="hR"><span class="cur sl">SL <b id="hSL">0</b></span><span class="cur rp">RP <b id="hRP">0</b></span><button class="ib" id="hOpt" title="Ayarlar">⚙</button></div></div>
-<div class="hInfo" id="hInfo"></div><div class="hSide"><button class="tbtn" id="hTree">ARAŞTIRMA AĞACI</button></div><div class="hSlots" id="hSlots"></div></div>
+<div class="hInfo" id="hInfo"></div><div class="hSide"><button class="tbtn" id="hTree">ARAŞTIRMA AĞACI</button><br><button class="tbtn mpb" id="hMp">ÇOK OYUNCULU</button></div><div class="hSlots" id="hSlots"></div></div>
 
 <div class="screen dim hidden" id="tree"><div class="tree"><div class="tHead"><b>ARAŞTIRMA AĞACI · ABD</b><span>SL <b id="tSL"></b> · RP <b id="tRP"></b> &nbsp;<button class="ib" id="tClose">✕</button></span></div><div class="tGrid" id="tGrid"></div><div class="tFoot" id="tFoot"></div></div></div>
 <div class="screen dim hidden" id="pick"><div class="panel"><div class="eyebrow">KADRO YUVASI</div><h2>ARAÇ<br><span>SEÇ</span></h2><div class="cards" id="pCards"></div><button class="go sec" id="pClose">VAZGEÇ</button></div></div>
+<div class="screen dim hidden" id="mp"><div class="panel">
+<div class="eyebrow">ARKADAŞLARINLA · EN FAZLA 12 KİŞİ</div><h2>ÇOK<br><span>OYUNCULU</span></h2>
+<p>Odayı kuranın tarayıcısı sunucu olur, diğerleri oda koduyla katılır. Herkes kendi hangar kadrosundaki araçlarla oynar. Odayı kuranın oyun ekranı muharebe boyunca açık kalmalı.</p>
+<div class="row">ADIN <input id="mpName" maxlength="16" class="mpIn"></div>
+<div class="row">MOD <button data-mm="ground">TANK vs TANK</button><button data-mm="air">UÇAK vs UÇAK</button></div>
+<div class="row">BOŞ YERLER <button data-mb="1">BOTLA DOLDUR</button><button data-mb="0">BOTSUZ</button></div>
+<div id="mpPre"><button class="go" id="mpHostB">ODA KUR</button><div class="row"><input id="mpCode" class="mpIn" placeholder="ODA KODU" maxlength="6" autocapitalize="characters"><button id="mpJoinB">KATIL</button></div></div>
+<div id="mpRoom" style="display:none"><div class="mpCode"><small>ODA KODU</small><b id="mpCodeShow"></b></div>
+<div class="row"><button id="mpCopy">DAVET BAĞLANTISINI KOPYALA</button><button id="mpTeam">TAKIM DEĞİŞTİR</button><button id="mpLeave">ODADAN AYRIL</button></div>
+<div class="mpList" id="mpList"></div><button class="go" id="mpStartB">MUHAREBEYİ BAŞLAT</button></div>
+<p id="mpSt" style="margin-top:10px"></p><button class="go sec" id="mpClose">KAPAT</button></div></div>
 <div class="screen dim hidden" id="opts"><div class="panel"><div class="eyebrow">AYARLAR</div><h2>AYAR<span>LAR</span></h2>
 <div class="row">GRAFİK <button data-q="high">YÜKSEK</button><button data-q="low">DÜŞÜK</button></div>
 <div class="row">MÜRETTEBAT SESİ <button data-vo="1">AÇIK</button><button data-vo="0">KAPALI</button></div>

@@ -351,11 +351,11 @@ vec3 c=pow(t.rgb,vec3(2.2))*vSh;vec3 col=c*(lk*(.4+.6*vY)*max(sunD.y,.2)*1.6+.35
 #include <encodings_fragment>
 }`});const mesh=new T.Mesh(g,m);mesh.frustumCulled=false;scene.add(mesh);return{m,mesh}})():null;chunked(GEO.rock,MAT.rock,ROCK,true);chunked(GEO.pole,MAT.pole,POLE,true,400);
 const FALL=[],_q=new T.Quaternion(),_q2=new T.Quaternion(),_ax=new T.Vector3(),_eu=new T.Euler();
-function knock(o,dx,dz){if(o.fall!=null)return;o.alive=0;o.fall=0;const l=Math.hypot(dx,dz)||1;o.fx=dx/l;o.fz=dz/l;FALL.push(o);dustAt(o.x,o.y+1,o.z,6,1.2)}
+function knock(o,dx,dz){if(o.fall!=null)return;if(NET.host)NET.ev.push(['kn',OB.indexOf(o),r2(dx),r2(dz)]);o.alive=0;o.fall=0;const l=Math.hypot(dx,dz)||1;o.fx=dx/l;o.fz=dz/l;FALL.push(o);dustAt(o.x,o.y+1,o.z,6,1.2)}
 function updFall(dt){for(let i=FALL.length-1;i>=0;i--){const o=FALL[i];o.fall=Math.min(1,o.fall+dt*(.6+o.fall*2.2));const a=Math.pow(o.fall,1.7)*(o.k==='pole'?1.45:1.38);
 _ax.set(o.fz,0,-o.fx);_q.setFromAxisAngle(_ax,a);_q2.setFromEuler(_eu.set(0,o.ry,0));dm.quaternion.copy(_q).multiply(_q2);dm.position.set(o.x,o.y,o.z);dm.scale.set(o.sx,o.sy,o.sz);dm.updateMatrix();
 o.im.setMatrixAt(o.i,dm.matrix);o.im.instanceMatrix.needsUpdate=true;if(o.fall>=1){FALL.splice(i,1);dustAt(o.x+o.fx*4,o.y+.5,o.z+o.fz*4,5,1.4)}}}
-function breakWall(o){o.alive=0;const i=WALLS.indexOf(o);if(wallIM&&i>=0){dm.position.set(0,-999,0);dm.scale.set(.001,.001,.001);dm.rotation.set(0,0,0);dm.updateMatrix();wallIM.setMatrixAt(i,dm.matrix);wallIM.instanceMatrix.needsUpdate=true}
+function breakWall(o){o.alive=0;if(NET.host)NET.ev.push(['wl',OB.indexOf(o)]);const i=WALLS.indexOf(o);if(wallIM&&i>=0){dm.position.set(0,-999,0);dm.scale.set(.001,.001,.001);dm.rotation.set(0,0,0);dm.updateMatrix();wallIM.setMatrixAt(i,dm.matrix);wallIM.instanceMatrix.needsUpdate=true}
 for(let k=0;k<10;k++)fxP(SMK,o.x+RV(-o.hw,o.hw)*o.c,o.y0+1,o.z-RV(-o.hw,o.hw)*o.s,RV(-1,1),RV(.5,2),RV(-1,1),RV(1.2,2.2),1.2,4,[.62,.56,.47],.5,0,.4)}
 
 /* ---------- Parçacıklar (tek çizimli, örneklenmiş) ---------- */
@@ -654,7 +654,7 @@ function ammoTick(t,dt){t.cd=Math.max(0,t.cd-dt);t.swapT=Math.max(0,t.swapT-dt);
 if(!t.D.ammo[0].belt){if(t.loaded<0&&t.loading<0)startLoad(t);if(t.loading>=0&&t.rl>0){t.rl-=dt*(crewAlive(t)>1?1:.5);if(t.rl<=0){t.rl=0;t.loaded=t.loading;t.loading=-1;if(t.isP){AU.S.load();VOICE.say('Hazır!')}}}return}
 for(const a of t.am){if(a.rlT>0){a.rlT-=dt;if(a.rlT<=0){const n=Math.min(a.belt,a.left);a.ready=n;a.left-=n;a.rlT=0;if(t.isP){AU.S.load();VOICE.say(a.atgm?'Füze hazır!':'Şerit takıldı!')}}}
 else if(a.ready<=0&&a.left>0){a.rlT=(a.atgm?15:8)*(G.mode==='ab'?.7:1);a.rl0=a.rlT}}}
-function quickReload(t){if(t.D.ammo[0].belt||!t.alive)return;if(t.loaded>=0&&t.loaded!==t.sel&&t.am[t.sel].left>0){t.am[t.loaded].left++;t.loaded=-1;startLoad(t);note('Hızlı doldurma: '+t.am[t.sel].k)}}
+function quickReload(t){if(NET.cl&&t===G.player){NET.cnt.r++;return}if(t.D.ammo[0].belt||!t.alive)return;if(t.loaded>=0&&t.loaded!==t.sel&&t.am[t.sel].left>0){t.am[t.loaded].left++;t.loaded=-1;startLoad(t);note('Hızlı doldurma: '+t.am[t.sel].k)}}
 function tryFire(t){if(!canFire(t))return false;
 if(!t.D.ammo[0].belt){if(t.loaded<0||t.rl>0)return false;const a=t.am[t.loaded];t.loaded=-1;launch(t,a);startLoad(t);return true}
 const a=t.am[t.sel];if(t.swapT>0||t.cd>0||a.ready<=0||a.rlT>0)return false;
@@ -675,7 +675,8 @@ const misG=(()=>{const g=new T.CylinderGeometry(.075,.075,1.15,8);g.rotateX(Math
 function spawnShell(t,a,p,d){const s={t,a,team:t.team,p,v:d.clone().multiplyScalar(a.atgm?55:a.v),life:a.atgm?19:5,pl:0,ign:t,ignT:.4,alive:1,dist:0,age:0};
 if(a.atgm){s.mesh=new T.Mesh(misG,misM);s.mesh.castShadow=true;t.missile=s}
 else{if(!trMats[a.id])trMats[a.id]=new T.MeshBasicMaterial({color:new T.Color(...a.col),fog:false,transparent:true,opacity:.9,blending:T.AdditiveBlending,depthWrite:false});s.mesh=new T.Mesh(trG,trMats[a.id]);s.mesh.frustumCulled=false}
-s.mesh.position.copy(p);scene.add(s.mesh);SHELLS.push(s);return s}
+s.mesh.position.copy(p);scene.add(s.mesh);SHELLS.push(s);if(NET.host&&!a.atgm){const ar=aref(t,a);if(ar){t.nid=t.nid||NET.nid++;s.ev=['sh',t.nid,ar,r2(p.x),r2(p.y),r2(p.z),r2(s.v.x),r2(s.v.y),r2(s.v.z)];NET.ev.push(s.ev)}}return s}
+function netFixV(s){if(s.ev){s.ev[6]=r2(s.v.x);s.ev[7]=r2(s.v.y);s.ev[8]=r2(s.v.z)}}
 function guide(s,h){const t=s.t,a=s.a;s.age+=h;let tp=null;
 if(a.mav){const u=s.tgt,dir=_b.copy(s.v).normalize(),spd=Math.min(a.v,140+s.age*260);if(u&&u.alive&&s.age>.2){_a.set(u.x-s.p.x,u.y+1.2-s.p.y,u.z-s.p.z).normalize();const an=dir.angleTo(_a);if(an>1e-4)dir.lerp(_a,Math.min(1,2.4*h/an)).normalize()}s.v.copy(dir).multiplyScalar(spd);return}
 if(t.alive&&canGun(t)){if(t.isP&&AIM.ok){tp=_c.copy(AIM.o).addScaledVector(AIM.d,s.p.distanceTo(AIM.o)+45)}
@@ -703,7 +704,7 @@ const sp=s.v.length();s.mesh.position.copy(s.p);_a.copy(s.p).add(s.v);s.mesh.loo
 function splash(P,a,s){const r=a.atgm?5:a.cal>100?4:1.4;for(const t of TANKS){if(!t.alive||t.team===s.team)continue;const d=Math.hypot(t.x-P.x,t.z-P.z);if(d>r+t.D.hl)continue;
 const c=Math.random();if(d<r+t.D.hw&&c<.35){const side=((P.x-t.x)*Math.cos(t.h)-(P.z-t.z)*Math.sin(t.h))>0?'L':'R';t.trk[side]=Math.max(0,t.trk[side]-(a.cal>100?60:20));if(t.isP&&t.trk[side]<=0)note('Palet koptu!','#ff6a50')}
 else if(c<.45&&a.cal>100){t.barrel=Math.max(0,t.barrel-.5)}}}
-function onHit(s,h,d,sp){const P=s.p,a=s.a,ex=a.he||a.heat,big=a.cal>40;
+function onHit(s,h,d,sp){const P=s.p,a=s.a,ex=a.he||a.heat,big=a.cal>40;if(NET.cl){const n=h.k==='ground'?nAt(P.x,P.z):{x:0,y:1,z:0};impactFx(P.x,P.y,P.z,n.x,n.y,n.z,ex?'expl':h.k==='ground'?'ground':h.k==='ob'?'bld':'metal',big);if(h.k==='tank'||h.k==='plane')AU.S.clang(P,0);kill(s);return}
 if(h.k==='plane'){planeHit(s,h.pl,h.part,P);kill(s);return}
 if(h.k==='ground'){const n=nAt(P.x,P.z);impactFx(P.x,P.y,P.z,n.x,n.y,n.z,ex?'expl':'ground',big);if(ex)AU.S.boom(P,a.atgm?.9:big?.6:.25);else AU.S.thud(P);if(ex)splash(P,a,s);kill(s);return}
 if(h.k==='ob'){const o=h.ob.o,nx=h.ob.nx,nz=h.ob.nz;
@@ -760,7 +761,7 @@ if(killer&&killer!==t){killer.stats.k++;const sc=t.type==='abrams'?220:170;kille
 for(const n in t.hitBy){const u=[...TANKS,...PLANES].find(x=>x.name===n&&x.alive);if(u&&u!==killer&&clock.t-t.hitBy[n]<30){u.stats.score+=60;addSP(u,SPV.assist);if(u.isP)note('+60 puan · +'+SPV.assist+' SP  Asist')}}
 FEED.unshift({a:killer&&killer!==t?killer:null,v:t,how:cause==='ammo'?'💥':cause==='fire'?'🔥':'',t:8});if(FEED.length>6)FEED.pop();
 G.tick[t.team]=Math.max(0,G.tick[t.team]-20);if(t.isP)playerDied(killer)}
-function report(R){if(R.sh.isP){const M={ric:['SEKME','#d9d2b8'],nopen:['DELİNMEDİ','#d9d2b8'],pen:['DELİNDİ','#f2c14e'],track:['PALET HASARI','#f2c14e'],barrel:['DIŞ MODÜL HASARI','#f2c14e']}[R.res];
+function report(R){if(NET.host)netReport(R);if(R.sh.isP){const M={ric:['SEKME','#d9d2b8'],nopen:['DELİNMEDİ','#d9d2b8'],pen:['DELİNDİ','#f2c14e'],track:['PALET HASARI','#f2c14e'],barrel:['DIŞ MODÜL HASARI','#f2c14e']}[R.res];
 if(!R.kill&&M){let s=M[0];if(R.res==='pen'&&(R.crewK||R.items.some(i=>i[1]<=0)))s='KRİTİK HASAR';G.marker={s,c:R.res==='pen'?'#f2c14e':M[1],t:2}}
 G.hitcam={...R,time:clock.t,crew:R.t.crew.map(c=>({...c})),mods:R.t.mods.map(m=>({...m})),trk:{...R.t.trk},barrel:R.t.barrel,ya:R.t.ya};if(R.res==='pen'){R.sh.stats.score+=R.kill?0:25;R.sh.stats.hits++;if(!R.kill)addSP(R.sh,SPV.pen)}
 if(!R.kill)VOICE.say({ric:'Sekti!',nopen:'Delemedi!',pen:R.crewK?'Kritik isabet!':'Delindi!',track:'Paleti koptu!',barrel:'Topu hasarlı!'}[R.res]||'İsabet!')}
@@ -776,15 +777,15 @@ function tankTick(t,dt){const d2=cam.position.distanceToSquared(t.g.position),ne
 if(!t.alive){t.deadT+=dt;if(t.burn>0){t.burn-=dt;const r=near?1:.3;t.inner.localToWorld(_c.set(0,2,t.D.cz));
 if(Math.random()<dt*10*r)fxP(SMK,_c.x+RV(-.8,.8),_c.y,_c.z+RV(-.8,.8),RV(-.4,.4),RV(2.5,4.5),RV(-.4,.4),RV(4,8),1.4,7.5,SMOKE,.55,-.25,.25);
 if(t.burn>15&&Math.random()<dt*18*r)fxP(ADD,_c.x+RV(-1,1),_c.y-.4,_c.z+RV(-1,1),RV(-.3,.3),RV(1.5,3),RV(-.3,.3),RV(.4,.8),1.2,.5,FIRE,1,-1,.5,0)}return}
-crewSwap(t,dt);
+if(!NET.cl)crewSwap(t,dt);
 if(t.fire){t.fireT+=dt;const em=modOf(t,'engine');em.hp=Math.max(0,em.hp-dt*3);t.inner.localToWorld(_c.set(0,2,t.type==='abrams'?-2.5:1.4));
 if(Math.random()<dt*24)fxP(ADD,_c.x+RV(-.7,.7),_c.y,_c.z+RV(-.7,.7),RV(-.5,.5),RV(1.5,3.5),RV(-.5,.5),RV(.3,.7),1,.4,FIRE,1,-1,.4,0);
 if(Math.random()<dt*8)fxP(SMK,_c.x,_c.y+.6,_c.z,RV(-.4,.4),RV(2,4),RV(-.4,.4),RV(3,6),1.2,5,SMOKE,.5,-.3,.3);
-if(Math.random()<dt*1.1){const al=t.crew.filter(c=>c.alive);if(al.length){const c=pick(al);c.hp-=RV(7,13);if(c.hp<=0){c.hp=0;c.alive=0;if(t.isP)note(c.n+' yangında öldü','#ff6a50')}}}
-if(crewAlive(t)<=1){destroyTank(t,t.fireBy,'fire');return}
+if(!NET.cl&&Math.random()<dt*1.1){const al=t.crew.filter(c=>c.alive);if(al.length){const c=pick(al);c.hp-=RV(7,13);if(c.hp<=0){c.hp=0;c.alive=0;if(t.isP)note(c.n+' yangında öldü','#ff6a50')}}}
+if(!NET.cl&&crewAlive(t)<=1){destroyTank(t,t.fireBy,'fire');return}
 if(t.ext>0){t.ext-=dt;if(t.ext<=0){t.fire=0;if(t.isP)note('Yangın söndürüldü','#7fe08a')}}if(t.fireT>30)t.fire=0}
 if(t.extCd>0)t.extCd-=dt;
-if(t.repT>0){if(Math.abs(t.sp)>.7||t.fire){t.repT=0;if(t.isP)note('Onarım iptal edildi','#d9d2b8')}else{t.repT+=dt;if(t.repT>=t.D.repair*(G.mode==='ab'?.6:1)){repairAll(t);t.repT=0;if(t.isP)note('Onarım tamamlandı','#7fe08a')}}}
+if(!NET.cl&&t.repT>0){if(Math.abs(t.sp)>.7||t.fire){t.repT=0;if(t.isP)note('Onarım iptal edildi','#d9d2b8')}else{t.repT+=dt;if(t.repT>=t.D.repair*(G.mode==='ab'?.6:1)){repairAll(t);t.repT=0;if(t.isP)note('Onarım tamamlandı','#7fe08a')}}}
 if(!near)return;const s=Math.sin(t.h),c=Math.cos(t.h),as=Math.abs(t.sp);
 if(as>3&&d2<150*150&&Math.random()<dt*as*(Q.hi?.9:.45)){const sg=Math.random()<.5?-1:1,off=t.D.hw-.4,bx=t.x-s*(t.D.hl-.6-t.D.cz)+c*off*sg,bz=t.z-c*(t.D.hl-.6-t.D.cz)-s*off*sg;
 fxP(SMK,bx,hAt(bx,bz)+.3,bz,-s*t.sp*.15+RV(-.6,.6),RV(.4,1.4),-c*t.sp*.15+RV(-.6,.6),RV(1.4,2.6),.9,3+as*.1,DUSTC,.2+as*.007,0,.8)}
@@ -880,14 +881,14 @@ AIR.ju87.rear=1;for(const k of['spit','ju87'])AIR[k].cd=AIR[k].thrust/AIR[k].mas
 const MG81={id:'mg81',n:'MG 81Z',k:'AP',v:790,pen:8,drag:.3,cal:8,spall:[1,10,10,1],core:20,col:[6,3,1],dmgAir:7};
 function rearGun(pl,dt){pl.rgc=(pl.rgc||0)-dt;if(pl.rgc>0)return;let best=null,bd=480;for(const e of PLANES){if(!e.alive||e.team===pl.team)continue;const d=e.p.distanceTo(pl.p);if(d>bd)continue;_a.copy(e.p).sub(pl.p).normalize();if(_a.dot(pl.fwd)>-.25)continue;bd=d;best=e}
 if(!best){pl.rgc=.3;return}pl.rgc=.09;const fl=bd/MG81.v,ds=.02,dir=new T.Vector3().copy(best.p).addScaledVector(best.fwd,best.V*fl).sub(pl.p).normalize();dir.x+=RV(-ds,ds);dir.y+=RV(-ds,ds);dir.z+=RV(-ds,ds);dir.normalize();
-const p=pl.p.clone().addScaledVector(pl.fwd,-1.6);p.y+=1;const s=spawnShell(pl,MG81,p,dir);s.v.addScaledVector(pl.fwd,pl.V);s.ignT=99;s.life=1.2;if(Math.random()<.3)AU.S.auto(p)}
+const p=pl.p.clone().addScaledVector(pl.fwd,-1.6);p.y+=1;const s=spawnShell(pl,MG81,p,dir);s.v.addScaledVector(pl.fwd,pl.V);netFixV(s);s.ignT=99;s.life=1.2;if(Math.random()<.3)AU.S.auto(p)}
 const GPM={};function gpMats(k){if(GPM[k])return GPM[k];const mk=t=>t?new T.MeshStandardMaterial({map:t.a,normalMap:t.n,normalScale:new T.Vector2(1,-1),roughnessMap:t.o,metalnessMap:t.o,envMapIntensity:.8}):new T.MeshStandardMaterial({vertexColors:true,roughness:.6,metalness:.25,envMapIntensity:.7});
 return GPM[k]={skin:mk(TEX[k+'_skin']),parts:mk(TEX[k+'_parts']),misc:new T.MeshStandardMaterial({vertexColors:true,roughness:.55,metalness:.3,envMapIntensity:.7})}}
 function glbPlane(k){const P=MODELS[k].parts,M=gpMats(k),g=new T.Group();for(const n of['skin','parts','misc'])if(P[n]&&P[n].geo){const m=new T.Mesh(P[n].geo,M[n]);m.castShadow=true;g.add(m)}
 let prop=null;if(P.prop){prop=new T.Group();prop.position.copy(P.prop.pos);const m=new T.Mesh(P.prop.geo,M.misc);m.castShadow=true;prop.add(m);g.add(prop)}scene.add(g);return{g,bombs:[],pods:[],prop}}
 const MAV={id:'mav',n:'AGM-65D',k:'ATGM',v:330,pen:700,cal:305,heat:1,he:1,atgm:1,mav:1,spall:[10,50,26,5],core:340,col:[7,4,2],dmgAir:200};
 function mavTarget(pl){let best=null,ba=.12;for(const t of TANKS){if(!t.alive||t.team===pl.team)continue;_a.set(t.x-pl.p.x,t.y+1.2-pl.p.y,t.z-pl.p.z);if(_a.length()>4000)continue;const an=_a.normalize().angleTo(pl.fwd);if(an<ba){ba=an;best=t}}return best}
-function planeMav(pl){if(!pl.mavN||pl.mcd>0||!pl.alive)return;const tg=mavTarget(pl);if(!tg||!losClear(pl.p.x,pl.p.y,pl.p.z,tg.x,tg.y+1.5,tg.z)){if(pl.isP)note('Maverick: kilit yok — burnu hedefe çevir','#d9d2b8');pl.mcd=.6;return}
+function planeMav(pl){if(NET.cl&&pl===G.player){NET.cnt.m++;return}if(!pl.mavN||pl.mcd>0||!pl.alive)return;const tg=mavTarget(pl);if(!tg||!losClear(pl.p.x,pl.p.y,pl.p.z,tg.x,tg.y+1.5,tg.z)){if(pl.isP)note('Maverick: kilit yok — burnu hedefe çevir','#d9d2b8');pl.mcd=.6;return}
 pl.mavN--;pl.mcd=1.2;const p=pl.p.clone();_c.set(pl.mavN%2?3.2:-3.2,-.8,.5).applyQuaternion(pl.q);p.add(_c);const s=spawnShell(pl,MAV,p,pl.fwd.clone());s.ignT=99;s.tgt=tg;s.life=20;AU.S.atgm(p);if(pl.isP){note('Maverick ateşlendi','#f2c14e');VOICE.say('Füze gitti!')}}
 function mergeNI(list){let n=0;const L=list.map(g=>{g=g.index?g.toNonIndexed():g;if(!g.attributes.uv)g.setAttribute('uv',new T.BufferAttribute(new Float32Array(g.attributes.position.count*2),2));n+=g.attributes.position.count;return g});
 const P=new Float32Array(n*3),Nn=new Float32Array(n*3),U=new Float32Array(n*2);let o=0;for(const g of L){const k=g.attributes.position.count;P.set(g.attributes.position.array,o*3);Nn.set(g.attributes.normal.array,o*3);U.set(g.attributes.uv.array,o*2);o+=k}
@@ -945,35 +946,35 @@ function planeHit(s,pl,part,P){const a=s.a,sh=s.t,dm=(a.dmgAir||(a.cal>100?240:a
 pl.hp[part]=Math.max(0,pl.hp[part]-dm);if(part!=='body')pl.hp.body=Math.max(0,pl.hp.body-dm*.35);pl.hitBy[sh.name]=clock.t;
 for(let i=0;i<6;i++)fxP(ADD,P.x,P.y,P.z,RV(-6,6),RV(-6,6),RV(-6,6),RV(.15,.35),.3,.1,SPARK,1,6,.2,1,0);fxP(ADD,P.x,P.y,P.z,0,0,0,.08,a.he?3:1.6,.6,FIRE,1,0,0,1,0);
 if((part==='eng'||part.startsWith('wing'))&&Math.random()<.12&&!pl.fire){pl.fire=1;if(pl.isP){note('UÇAK YANIYOR!','#ff6a50');VOICE.say('Yangın var!',1)}}
-if(sh.isP){addSP(sh,SPV.hitAir);G.marker={s:part.startsWith('wing')&&pl.hp[part]<=0?'KANAT KOPTU':'UÇAĞA İSABET',c:'#f2c14e',t:1.4}}
-if(pl.isP){G.hurt=Math.max(G.hurt,.5);G.shake=Math.max(G.shake,.4);IND.push({x:sh.x,z:sh.z,t:2});if(pl.hp[part]<=0)note({wingL:'Sol kanat koptu!',wingR:'Sağ kanat koptu!',tail:'Kuyruk hasarlı!',eng:'Motorlar durdu!',pilot:'Pilot vuruldu!'}[part]||'Gövde hasarı!','#ff6a50')}
+if(NET.host&&sh.pl)toP(sh.pl,{t:'mk',s:'UÇAĞA İSABET'});if(sh.isP){addSP(sh,SPV.hitAir);G.marker={s:part.startsWith('wing')&&pl.hp[part]<=0?'KANAT KOPTU':'UÇAĞA İSABET',c:'#f2c14e',t:1.4}}
+if(NET.host&&pl.pl)toP(pl.pl,{t:'hurt',x:r2(sh.x),z:r2(sh.z),res:'ric',it:[]});if(pl.isP){G.hurt=Math.max(G.hurt,.5);G.shake=Math.max(G.shake,.4);IND.push({x:sh.x,z:sh.z,t:2});if(pl.hp[part]<=0)note({wingL:'Sol kanat koptu!',wingR:'Sağ kanat koptu!',tail:'Kuyruk hasarlı!',eng:'Motorlar durdu!',pilot:'Pilot vuruldu!'}[part]||'Gövde hasarı!','#ff6a50')}
 if(pl.alive&&(pl.hp.body<=0||pl.hp.pilot<=0||pl.hp.wingL<=0||pl.hp.wingR<=0))shootDown(pl,sh)}
 function shootDown(pl,killer){if(!pl.alive)return;pl.alive=false;pl.falling=1;pl.spin=RV(1.2,2.4)*(Math.random()<.5?-1:1);pl.fire=1;boom(pl.p.x,pl.p.y,pl.p.z,.9,1);AU.S.boom(pl.p,.8);
-if(killer&&killer!==pl){killer.stats.k++;killer.stats.score+=200;addSP(killer,SPV.air);if(killer.isP){G.marker={s:'UÇAK DÜŞÜRÜLDÜ',c:'#ff5a4a',t:2.6};note(`+200 puan · +${SPV.air} SP  ${pl.D.short} düşürüldü`);VOICE.say('Uçak düşürüldü!',1)}}
+if(killer&&killer!==pl){killer.stats.k++;killer.stats.score+=200;addSP(killer,SPV.air);if(NET.host&&killer.pl)toP(killer.pl,{t:'mk',s:'UÇAK DÜŞÜRÜLDÜ',c:'#ff5a4a',v:'Uçak düşürüldü!'});if(killer.isP){G.marker={s:'UÇAK DÜŞÜRÜLDÜ',c:'#ff5a4a',t:2.6};note(`+200 puan · +${SPV.air} SP  ${pl.D.short} düşürüldü`);VOICE.say('Uçak düşürüldü!',1)}}
 FEED.unshift({a:killer&&killer!==pl?killer:null,v:pl,how:'✈',t:8});if(FEED.length>6)FEED.pop();G.tick[pl.team]=Math.max(0,G.tick[pl.team]-25);if(pl.isP)playerDied(killer)}
-function crash(pl){pl.alive=false;pl.dead=1;const gy=hAt(pl.p.x,pl.p.z);boom(pl.p.x,gy+.5,pl.p.z,2.4,1);dustAt(pl.p.x,gy,pl.p.z,12,3);AU.S.boom(pl.p,1.3);scene.remove(pl.g);
+function crash(pl){pl.alive=false;pl.dead=1;const gy=hAt(pl.p.x,pl.p.z);if(NET.host)NET.ev.push(['cr',r2(pl.p.x),r2(gy),r2(pl.p.z)]);boom(pl.p.x,gy+.5,pl.p.z,2.4,1);dustAt(pl.p.x,gy,pl.p.z,12,3);AU.S.boom(pl.p,1.3);scene.remove(pl.g);
 if(!pl.falling){FEED.unshift({a:null,v:pl,how:'✈ düştü',t:8});G.tick[pl.team]=Math.max(0,G.tick[pl.team]-30);if(pl.isP)playerDied(null)}
 for(const t of TANKS)if(t.alive&&Math.hypot(t.x-pl.p.x,t.z-pl.p.z)<6)destroyTank(t,null,'crew')}
 function planeGun(pl){if(pl.gunN<=0||pl.gcd>0||!pl.alive)return;pl.gcd=pl.D.rof;pl.gunN--;const d=pl.fwd.clone(),ds=pl.D.disp*(pl.ai?2.2:1);d.x+=RV(-1,1)*ds;d.y+=RV(-1,1)*ds;d.z+=RV(-1,1)*ds;d.normalize();
-const p=pl.p.clone().addScaledVector(pl.fwd,pl.D.prop?3:8.6);_c.set(0,-.35,0).applyQuaternion(pl.q);p.add(_c);const s=spawnShell(pl,pl.D.gun,p,d);s.v.addScaledVector(pl.fwd,pl.V);s.ignT=99;s.life=3;
+const p=pl.p.clone().addScaledVector(pl.fwd,pl.D.prop?3:8.6);_c.set(0,-.35,0).applyQuaternion(pl.q);p.add(_c);const s=spawnShell(pl,pl.D.gun,p,d);s.v.addScaledVector(pl.fwd,pl.V);netFixV(s);s.ignT=99;s.life=3;
 pl.lastShot=clock.t;if(Math.random()<.5)fxP(ADD,p.x,p.y,p.z,d.x*20,d.y*20,d.z*20,.05,1.4,.5,FIRE,1,0,0,0,0);if(Math.random()<.35)fxP(SMK,p.x,p.y,p.z,0,0,0,RV(.8,1.6),.5,2.5,[.6,.58,.55],.25,0,.5);if(pl.D.rof>.2)AU.S.cannon(p,false);else if(Math.random()<.5)(pl.D.prop?AU.S.auto(p):AU.S.brrt(p))}
 function planeRocket(pl){if(pl.rkN<=0||pl.rcd>0||!pl.alive)return;pl.rcd=.16;pl.rkN--;pl.rside*=-1;const p=pl.p.clone();_c.set(pl.rside*(pl.kind==='a10'?7.2:5),pl.kind==='a10'?-.8:-.1,1.5).applyQuaternion(pl.q);p.add(_c);
-const d=pl.fwd.clone();d.x+=RV(-1,1)*.006;d.y+=RV(-1,1)*.006;d.z+=RV(-1,1)*.006;d.normalize();const s=spawnShell(pl,pl.D.rk,p,d);s.v.addScaledVector(pl.fwd,pl.V);s.ignT=99;s.life=5;
+const d=pl.fwd.clone();d.x+=RV(-1,1)*.006;d.y+=RV(-1,1)*.006;d.z+=RV(-1,1)*.006;d.normalize();const s=spawnShell(pl,pl.D.rk,p,d);s.v.addScaledVector(pl.fwd,pl.V);netFixV(s);s.ignT=99;s.life=5;
 fxP(ADD,p.x,p.y,p.z,0,0,0,.08,1.5,.6,FIRE,1,0,0,1,0);AU.S.rocket(p);if(pl.rkN<=0)pl.vis.pods.forEach(m=>m.visible=false)}
-function planeBomb(pl){if(pl.bmN<=0||pl.bcd>0||!pl.alive)return;pl.bcd=.3;pl.bmN--;const m=pl.vis.bombs[pl.bmN],p=m?m.getWorldPosition(new T.Vector3()):pl.p.clone();if(m)m.visible=false;
-const mesh=new T.Mesh(bombGeo,planeMats(pl.kind,pl.team).dark);mesh.castShadow=true;scene.add(mesh);BOMBS.push({p,v:pl.fwd.clone().multiplyScalar(pl.V),mesh,team:pl.team,owner:pl});AU.S.ui(300)}
+function planeBomb(pl){if(NET.cl&&pl===G.player){NET.cnt.b++;return}if(pl.bmN<=0||pl.bcd>0||!pl.alive)return;pl.bcd=.3;pl.bmN--;const m=pl.vis.bombs[pl.bmN],p=m?m.getWorldPosition(new T.Vector3()):pl.p.clone();if(m)m.visible=false;
+const mesh=new T.Mesh(bombGeo,planeMats(pl.kind,pl.team).dark);mesh.castShadow=true;scene.add(mesh);BOMBS.push({p,v:pl.fwd.clone().multiplyScalar(pl.V),mesh,team:pl.team,owner:pl});AU.S.ui(300);if(NET.host){const b=BOMBS[BOMBS.length-1];NET.ev.push(['bm',r2(b.p.x),r2(b.p.y),r2(b.p.z),r2(b.v.x),r2(b.v.y),r2(b.v.z)])}}
 function bombPath(p0,v0){const p=p0.clone(),v=v0.clone();for(let i=0;i<500;i++){v.y-=9.81*.05;v.multiplyScalar(1-.01*.05);p.addScaledVector(v,.05);if(p.y<hAt(p.x,p.z))return p}return null}
 function updBombs(dt){for(let i=BOMBS.length-1;i>=0;i--){const b=BOMBS[i];b.v.y-=9.81*dt;b.v.multiplyScalar(1-.01*dt);b.p.addScaledVector(b.v,dt);b.mesh.position.copy(b.p);b.mesh.lookAt(_a.copy(b.p).add(b.v));
 let hit=b.p.y<hAt(b.p.x,b.p.z)+.3;if(!hit)gQuery(b.p.x,b.p.z,2,o=>{if(o.k==='bld'&&b.p.y<o.y0+o.h&&boxNear(o,b.p.x,b.p.z,.5))hit=true});if(!hit)for(const t of TANKS)if(t.alive&&b.p.distanceTo(t.g.position)<3.2)hit=true;
 if(hit){scene.remove(b.mesh);BOMBS.splice(i,1);bombBoom(b)}}}
 function bombBoom(b){const P=b.p,gy=hAt(P.x,P.z);boom(P.x,gy+.6,P.z,3.2,0);dustAt(P.x,gy,P.z,14,4);for(let i=0;i<14;i++)fxP(SMK,P.x,gy,P.z,RV(-10,10),RV(8,22),RV(-10,10),RV(1,2),.5,1.2,[.25,.2,.15],.9,16,.2,1);
 AU.S.boom(P,1.8);if(G.player&&!G.player.air&&G.player.g.position.distanceTo(P)<60)G.shake=Math.max(G.shake,1.2);
-for(const t of TANKS){if(!t.alive||t.team===b.team)continue;const d=Math.hypot(t.x-P.x,t.y+1.2-P.y,t.z-P.z);if(d>13)continue;
+if(NET.cl)return;for(const t of TANKS){if(!t.alive||t.team===b.team)continue;const d=Math.hypot(t.x-P.x,t.y+1.2-P.y,t.z-P.z);if(d>13)continue;
 if(d<4.6){destroyTank(t,b.owner,'crew');continue}const k=1-(d-4.6)/8.4;t.trk.L=Math.max(0,t.trk.L-110*k*RV(.5,1));t.trk.R=Math.max(0,t.trk.R-110*k*RV(.5,1));
 t.mods.forEach(m=>{if(Math.random()<k*.7)m.hp=Math.max(0,m.hp-m.max*k*RV(.4,1))});const lightK=t.type==='bradley'?1.6:.7;t.crew.forEach(c=>{if(c.alive&&Math.random()<k){c.hp-=RV(30,80)*k*lightK;if(c.hp<=0){c.hp=0;c.alive=0}}});
 if(t.alive&&crewAlive(t)<=1)destroyTank(t,b.owner,'crew');else if(b.owner.isP){G.marker={s:'BOMBA İSABETİ',c:'#f2c14e',t:2}}if(t.isP){G.hurt=1;note('Bomba isabeti!','#ff6a50')}}
 gQuery(P.x,P.z,12,o=>{if(!o.alive)return;const d=Math.hypot(o.x-P.x,o.z-P.z);if((o.k==='tree'||o.k==='pole')&&d<10)knock(o,o.x-P.x,o.z-P.z);else if(o.k==='wall'&&d<8)breakWall(o)})}
-function planeTick(pl,dt){if(pl.D.rear&&pl.alive)rearGun(pl,dt);if(pl.vis.prop)pl.vis.prop.rotation.z+=dt*(pl.alive?28+pl.thr*40:3);pl.gcd-=dt;pl.rcd-=dt;pl.bcd-=dt;pl.mcd-=dt;const gy=hAt(pl.p.x,pl.p.z);pl.alt=pl.p.y-gy;
+function planeTick(pl,dt){if(NET.cl){if(pl.vis.prop)pl.vis.prop.rotation.z+=dt*(pl.alive?28+pl.thr*40:3);pl.alt=pl.p.y-hAt(pl.p.x,pl.p.z);if((pl.falling||!pl.alive||pl.fire)&&Math.random()<dt*30)fxP(SMK,pl.p.x,pl.p.y,pl.p.z,RV(-.5,.5),RV(-.5,.5),RV(-.5,.5),RV(2,4),1,4.5,SMOKE,.55,-.1,.3);return}if(pl.D.rear&&pl.alive)rearGun(pl,dt);if(pl.vis.prop)pl.vis.prop.rotation.z+=dt*(pl.alive?28+pl.thr*40:3);pl.gcd-=dt;pl.rcd-=dt;pl.bcd-=dt;pl.mcd-=dt;const gy=hAt(pl.p.x,pl.p.z);pl.alt=pl.p.y-gy;
 if(pl.fire){pl.hp.body-=dt*6;if(Math.random()<dt*30)fxP(ADD,pl.p.x,pl.p.y,pl.p.z,RV(-1,1),RV(-1,1),RV(-1,1),RV(.2,.45),1.6,.5,FIRE,1,0,1,0);if(pl.alive&&pl.hp.body<=0)shootDown(pl,null)}
 const dmg=pl.hp.body<pl.D.hp.body*.6||pl.hp.eng<pl.D.hp.eng*.5||pl.falling;if((dmg||pl.fire)&&Math.random()<dt*(pl.falling?40:16))fxP(SMK,pl.p.x,pl.p.y,pl.p.z,RV(-.5,.5),RV(-.5,.5),RV(-.5,.5),RV(2,4),1,4.5,pl.fire?SMOKE:GREY,.55,-.1,.3);
 if(pl.alt<1.2||pl.p.y<gy+1.2){crash(pl);return}
@@ -994,7 +995,7 @@ const airBR=()=>{const sel=PF.p.line[PF.p.sel];return sel&&AIR[sel]?TREE[sel].br
 function airPool(){const br=airBR(),L=Object.keys(TREE).filter(k=>AIR[k]&&TREE[k].br<=br+1&&TREE[k].br>=br-1.5);return L.length?L:['spit','ju87']}
 function spawnFighter(team,k,name,lives){const s=AIRSP[team],sg=team==='blue'?-1:1,pos=new T.Vector3(RV(-300,300),hAt(0,s.z)+RV(900,1300),s.z+RV(-80,80)),pl=makePlane(k,team,name,0,pos,new T.Vector3(RV(-.1,.1),0,sg).normalize());
 pl.V=AIR[k].vmax*.85;pl.ai={f:1,tgt:null,rt:0};pl.lives=lives==null?3:lives;return pl}
-function startAir(){clearBattle();G.air=1;capVis(0);G.tick={blue:400,red:400};G.time=900;G.used={};G.result=null;G.deathT=0;G.deadShown=0;G.bound=0;G.player=null;G.sp=0;G.first=1;TSP.blue=TSP.red=0;G.bt=0;
+function startAir(){clearBattle();G.air=1;G.mp=0;G.noAir=0;capVis(0);G.tick={blue:400,red:400};G.time=900;G.used={};G.result=null;G.deathT=0;G.deadShown=0;G.bound=0;G.player=null;G.sp=0;G.first=1;TSP.blue=TSP.red=0;G.bt=0;
 LINE=PF.p.line.filter(k=>k&&PF.p.own[k]&&AIR[k]&&Math.abs(TREE[k].br-airBR())<=1.5);const pool=airPool(),bl=pool.filter(k=>TREE[k].nat===PF.p.nat),rd=pool.filter(k=>TREE[k].nat!==PF.p.nat);
 for(let i=0;i<5;i++)spawnFighter('blue',pick(bl.length?bl:pool),NAMES.blue[i]);for(let i=0;i<6;i++)spawnFighter('red',pick(rd.length?rd:pool),NAMES.red[i%5]+(i>4?'-2':''));
 G.state='play';showSpawn(true);note('HAVA MUHAREBESİ — düşman uçaklarını düşür!','#f2c14e')}
@@ -1031,18 +1032,18 @@ function clearBattle(){for(const t of TANKS){scene.remove(t.g);if(t.turret.paren
 PLANES.forEach(p=>scene.remove(p.g));PLANES.length=0;BOMBS.forEach(b=>scene.remove(b.mesh));BOMBS.length=0;
 SHELLS.forEach(s=>scene.remove(s.mesh));SHELLS.length=0;DEBRIS.length=0;RESP.length=0;FEED.length=0;MSG.length=0;IND.length=0;G.hitcam=null;G.marker=null}
 function addTank(type,team,name,x,z,h,isP){const t=makeTank(type,team,name,isP);t.x=x;t.z=z;t.h=h;t.y=hAt(x,z);place(t,0);TANKS.push(t);if(!isP)newAI(t,TANKS.filter(u=>u.team===team&&!u.isP).length);return t}
-function startBattle(){clearBattle();G.air=0;capVis(1);CAPS.forEach(c=>{c.v=0;c.owner='none'});G.tick={blue:700,red:700};G.time=1080;G.used={};G.result=null;G.deathT=0;G.deadShown=0;G.bound=0;G.player=null;G.sp=0;G.first=0;TSP.blue=TSP.red=0;G.bt=0;
+function startBattle(){clearBattle();G.air=0;G.mp=0;G.noAir=0;capVis(1);CAPS.forEach(c=>{c.v=0;c.owner='none'});G.tick={blue:700,red:700};G.time=1080;G.used={};G.result=null;G.deathT=0;G.deadShown=0;G.bound=0;G.player=null;G.sp=0;G.first=0;TSP.blue=TSP.red=0;G.bt=0;
 LINE=PF.p.line.filter(k=>k&&PF.p.own[k]);const pool=mmPool(),bp=pool.filter(k=>TREE[k].nat===PF.p.nat),rp=pool.filter(k=>TREE[k].nat!==PF.p.nat),pkB=()=>pick(bp.length?bp:pool),pkR=()=>pick(rp.length?rp:pool);
 [0,1,2,3,4,5].map(pkR).forEach((k,i)=>addTank(k,'red',NAMES.red[i%5]+(i>4?'-2':''),SPAWN.red.x+(i-2.5)*16,SPAWN.red.z+RV(-6,6),SPAWN.red.h,0));
 [0,1,2,3,4].map(pkB).forEach((k,i)=>addTank(k,'blue',NAMES.blue[i],SPAWN.blue.x+[-44,-26,26,44,62][i],SPAWN.blue.z+RV(-6,6),SPAWN.blue.h,0));
 G.state='play';showSpawn(true)}
-const spCost=k=>G.air?0:(!G.first&&!AIR[k])?0:Math.round(AIR[k]?150+TREE[k].br*15:60+TREE[k].br*17),canSpawn=k=>G.air?!!AIR[k]:!G.used[k]&&G.sp>=spCost(k);
-function doSpawn(k){if(!canSpawn(k))return false;G.sp-=spCost(k);if(!G.air)G.used[k]=1;if(!AIR[k])G.first=1;if(G.player){G.player.isP=false;G.player.prevP=true}
-if(AIR[k]){const s=AIRSP.blue,pos=new T.Vector3(RV(-90,90),hAt(0,s.z)+(G.air?1100:s.y),s.z),pl=makePlane(k,'blue','Sen',1,pos,new T.Vector3(0,0,-1));pl.V=AIR[k].prop?AIR[k].vmax*.85:165;G.player=pl;cs.yaw=Math.PI;cs.pitch=-.06;cs.dist=AIR[k].prop?14:20;VOICE.say('Kalkışa hazır!',1)}
-else{const sp=SPAWN.blue,p=addTank(k,'blue','Sen',sp.x+RV(-10,10),sp.z+RV(-3,8),sp.h,1);G.player=p;cs.yaw=p.h;cs.pitch=.05;cs.dist=13;p.extCd=0}
+const spCost=k=>G.air||G.mp?0:(!G.first&&!AIR[k])?0:Math.round(AIR[k]?150+TREE[k].br*15:60+TREE[k].br*17),canSpawn=k=>G.mp?(G.air?!!AIR[k]:!AIR[k]):G.air?!!AIR[k]:!G.used[k]&&G.sp>=spCost(k);
+function doSpawn(k){if(!canSpawn(k))return false;G.sp-=spCost(k);if(!G.air&&!G.mp)G.used[k]=1;if(!AIR[k])G.first=1;if(G.player){G.player.isP=false;G.player.prevP=true}
+if(AIR[k]){const s=AIRSP.blue,pos=new T.Vector3(RV(-90,90),hAt(0,s.z)+(G.air?1100:s.y),s.z),pl=makePlane(k,'blue',G.mp?myName():'Sen',1,pos,new T.Vector3(0,0,-1));pl.mine=1;pl.V=AIR[k].prop?AIR[k].vmax*.85:165;G.player=pl;cs.yaw=Math.PI;cs.pitch=-.06;cs.dist=AIR[k].prop?14:20;VOICE.say('Kalkışa hazır!',1)}
+else{const sp=SPAWN.blue,p=addTank(k,'blue',G.mp?myName():'Sen',sp.x+RV(-10,10),sp.z+RV(-3,8),sp.h,1);p.mine=1;G.player=p;cs.yaw=p.h;cs.pitch=.05;cs.dist=13;p.extCd=0}
 cs.sight=0;cs.zoom=0;G.deathT=0;G.deadShown=0;G.bound=0;note(`${UNIT(k).name} sahada`,'#f2c14e');return true}
 function playerDied(k){G.deathT=0;G.killer=k&&k!==G.player?k:null;cs.sight=0;mouseF=touchF=0;rocketF=0;if(G.player&&!G.player.air)VOICE.say('Araç kaybedildi!',1)}
-function leaveVehicle(){const p=G.player;if(!p||!p.alive)return;if(p.air){p.alive=false;p.dead=1;scene.remove(p.g);G.tick.blue=Math.max(0,G.tick.blue-30);playerDied(null)}else destroyTank(p,null,'crew');G.deathT=2.5}
+function leaveVehicle(){const p=G.player;if(!p||!p.alive)return;if(NET.cl){NET.cnt.j++;return}if(p.air){p.alive=false;p.dead=1;scene.remove(p.g);G.tick.blue=Math.max(0,G.tick.blue-30);playerDied(null)}else destroyTank(p,null,'crew');G.deathT=2.5}
 function checkEnd(){if(G.result)return;if(G.air){let r=null;if(G.tick.red<=0)r='win';else if(G.tick.blue<=0)r='lose';else if(G.time<=0)r=G.tick.blue>=G.tick.red?'win':'lose';if(r)endBattle(r);return}const al=tm=>TANKS.some(t=>t.alive&&t.team===tm)||RESP.some(r=>r.team===tm),pAlive=G.player&&G.player.alive,pCan=LINE.some(canSpawn);
 let r=null;if(G.tick.red<=0||!al('red'))r='win';else if(G.tick.blue<=0||(!al('blue')&&!pAlive&&!pCan))r='lose';else if(G.time<=0)r=G.tick.blue>=G.tick.red?'win':'lose';if(r)endBattle(r)}
 
@@ -1054,9 +1055,9 @@ function look(dx,dy,k){k/=zoomOf();if(isAir())k*=1.15;if(cs.free){cs.fy-=dx*k;cs
 function sightStep(d){const p=G.player;if(!p||!p.alive||p.air)return;cs.sight=cl(cs.sight+d,0,2);AU.S.ui(cs.sight?660:520)}
 function selAmmo(i){const p=G.player;if(!p||!p.alive||p.air||i>=p.am.length||i===p.sel)return;p.sel=i;if(p.D.ammo[0].belt)p.swapT=.45;AU.S.ui(740);
 note(p.D.ammo[0].belt?`${p.am[i].k} seçildi`:`Sonraki mermi: ${p.am[i].k}  ·  [R] hızlı doldur`,'#d9d2b8')}
-function doRepair(){const p=G.player;if(!p||!p.alive||p.air)return;if(p.repT>0){p.repT=0;note('Onarım iptal edildi','#d9d2b8');return}if(!needsRepair(p)){note('Onarılacak modül yok','#d9d2b8');return}
+function doRepair(){const p=G.player;if(!p||!p.alive||p.air)return;if(NET.cl){NET.cnt.x++;return}if(p.repT>0){p.repT=0;note('Onarım iptal edildi','#d9d2b8');return}if(!needsRepair(p)){note('Onarılacak modül yok','#d9d2b8');return}
 if(Math.abs(p.sp)>.7){note('Onarım için dur','#d9d2b8');return}p.repT=.001;note(`Onarım başladı (${Math.round(p.D.repair*(G.mode==='ab'?.6:1))} sn)`,'#d9d2b8')}
-function doExt(){const p=G.player;if(!p||!p.alive||p.air||!p.fire)return;if(p.extCd>0){note(`Söndürücü hazır değil (${Math.ceil(p.extCd)} sn)`,'#d9d2b8');return}p.ext=1.8;p.extCd=14;note('Yangın söndürülüyor…','#d9d2b8')}
+function doExt(){const p=G.player;if(!p||!p.alive||p.air||!p.fire)return;if(NET.cl){NET.cnt.F++;return}if(p.extCd>0){note(`Söndürücü hazır değil (${Math.ceil(p.extCd)} sn)`,'#d9d2b8');return}p.ext=1.8;p.extCd=14;note('Yangın söndürülüyor…','#d9d2b8')}
 const playing=()=>G.state==='play'&&!paused&&!G.deadShown;
 const bt=()=>({fire:{x:SW-96,y:SH-104,r:58},sight:{x:SW-64,y:SH-226,r:33},ammo:{x:SW-196,y:SH-56,r:33},rep:{x:SW-272,y:SH-50,r:28},ext:{x:SW-196,y:SH-140,r:28}});
 function setTouch(on){if(touchUI===on)return;touchUI=on;document.body.classList.toggle('touch',on)}
@@ -1202,7 +1203,7 @@ if(G.pull&&clock.t%0.6<.38)tx('YÜKSEL!',cx,cy-64,HC.r,FT(28,900));else if(G.sta
 for(const d of IND){if(!p)break;const ang=Math.atan2(d.x-p.x,d.z-p.z)-cs.yaw,ux=-Math.sin(ang),uy=-Math.cos(ang);
 x.save();x.translate(cx+ux*120,cy+uy*120);x.rotate(Math.atan2(uy,ux)+Math.PI/2);x.fillStyle=`rgba(230,50,35,${Math.min(1,d.t)})`;x.beginPath();x.moveTo(0,-14);x.lineTo(16,8);x.lineTo(-16,8);x.fill();x.restore()}
 if(G.hurt>0&&!Q.post){const g=x.createRadialGradient(cx,cy,SH*.3,cx,cy,SH*.8);g.addColorStop(0,'rgba(190,30,20,0)');g.addColorStop(1,`rgba(190,30,20,${G.hurt*.45})`);x.fillStyle=g;x.fillRect(0,0,SW,SH)}
-const ak=airK();topBar();if(!G.air)tx(`SP ${G.sp|0}`+(ak&&!G.used[ak]?`  ·  ✈ ${UNIT(ak).short}: ${Math.min(G.sp|0,spCost(ak))}/${spCost(ak)}`:''),cx,(touchUI?30:28)+42,HC.y,FT(14,800));tx(ab?'ARCADE':'GERÇEKÇİ',cx,(touchUI?30:28)+57,HC.m,FM(8));
+const ak=airK();topBar();if(!G.air&&!G.mp)tx(`SP ${G.sp|0}`+(ak&&!G.used[ak]?`  ·  ✈ ${UNIT(ak).short}: ${Math.min(G.sp|0,spCost(ak))}/${spCost(ak)}`:''),cx,(touchUI?30:28)+42,HC.y,FT(14,800));tx(ab?'ARCADE':'GERÇEKÇİ',cx,(touchUI?30:28)+57,HC.m,FM(8));
 FEED.forEach((f,i)=>{const y=(touchUI?170:70)+i*19;x.globalAlpha=Math.min(1,f.t);x.font=FT(14,700);x.textAlign='right';let X=touchUI?SW-16:16+[f.v.name+' '+f.v.D.short,' ✕ '+(f.how||''),f.a?f.a.name+' '+f.a.D.short:''].reduce((w,s)=>w+x.measureText(s).width,0);
 const seg=[[f.v.name+' '+f.v.D.short,tcol(f.v.team)],[' ✕ '+(f.how||''),HC.w],[f.a?f.a.name+' '+f.a.D.short:'',f.a?tcol(f.a.team):HC.w]];
 for(const[s,c]of seg){x.fillStyle='rgba(0,0,0,.6)';x.fillText(s,X+1,y+1);x.fillStyle=c;x.fillText(s,X,y);X-=x.measureText(s).width}x.globalAlpha=1});
@@ -1252,7 +1253,7 @@ else{btn(b.fire,'ATEŞ',touchF,HC.y);btn(b.sight,cs.sight?'×'+zoomOf():'NİŞAN
 if(SH>SW){x.fillStyle='rgba(13,16,14,.85)';x.fillRect(0,cy-34,SW,68);tx('CİHAZI YATAY ÇEVİR',cx,cy,HC.y,FT(20,800))}}}
 
 /* ---------- Ekranlar + akış ---------- */
-function screens(id){['load','menu','pause','spawn','end','tree','opts','pick'].forEach(k=>$('#'+k).classList.toggle('hidden',k!==id))}
+function screens(id){['load','menu','pause','spawn','end','tree','opts','pick','mp'].forEach(k=>$('#'+k).classList.toggle('hidden',k!==id))}
 /* ---------- Hangar (3B sergi) ---------- */
 const HS=new T.Scene(),HCAM=new T.PerspectiveCamera(40,1,.1,400),HV={obj:null,k:null,yaw:.75,pitch:.16,dist:12,drag:0,spin:0};
 (()=>{const fT=cTex(512,(x,s)=>{noiseFill(x,s,8,91,[66,68,70],[104,106,108],1.2);speck(x,s,900,['#55575a','#8a8c90'],1,3,.3);x.strokeStyle='rgba(25,25,25,.55)';x.lineWidth=3;for(let i=0;i<=4;i++){x.beginPath();x.moveTo(i*s/4,0);x.lineTo(i*s/4,s);x.moveTo(0,i*s/4);x.lineTo(s,i*s/4);x.stroke()}});fT.repeat.set(7,7);
@@ -1334,11 +1335,11 @@ function spawnCards(){const ok=LINE.filter(canSpawn);if(!sSel||!canSpawn(sSel))s
 $('#scards').innerHTML=LINE.map(k=>{const U=UNIT(k),c=spCost(k),st=G.used[k]?'KULLANILDI':c===0?'ÜCRETSİZ':`${c} SP${G.sp<c?' · yetersiz':''}`;
 return`<button class="card${canSpawn(k)?'':' used'}${k===sSel?' on':''}" data-v="${k}">${thumbImg(k)}<b>${U.short}</b><small>${ltx(k)} · BR ${TREE[k].br.toFixed(1)}</small><small style="color:${canSpawn(k)?'#f2c14e':'#a3a59a'}">${st}</small></button>`}).join('');
 $('#scards').querySelectorAll('.card').forEach(c=>c.onclick=()=>{sSel=c.dataset.v;spawnCards()});$('#sgo').disabled=!sSel;$('#sleave').style.display=ok.length?'none':'block';
-$('#stx').textContent=G.air?'Hava muharebesi: kadrondaki uçaklarla sınırsız doğarsın. Düşman uçaklarını düşür, biletlerini erit.':ok.length?(G.first?'Araç kazanmak için SP harca: imha, isabet ve nokta ele geçirme SP kazandırır. Uçak için önce SP biriktir.':'İlk kara aracın ücretsiz. Uçak için önce savaşta SP kazan.'):'Kadronda kullanılabilir araç kalmadı.'}
+$('#stx').textContent=G.mp?'Arkadaş muharebesi: kadrondaki araçlarla sınırsız doğarsın.':G.air?'Hava muharebesi: kadrondaki uçaklarla sınırsız doğarsın. Düşman uçaklarını düşür, biletlerini erit.':ok.length?(G.first?'Araç kazanmak için SP harca: imha, isabet ve nokta ele geçirme SP kazandırır. Uçak için önce SP biriktir.':'İlk kara aracın ücretsiz. Uçak için önce savaşta SP kazan.'):'Kadronda kullanılabilir araç kalmadı.'}
 function showSpawn(first){G.deadShown=1;$('#seb').textContent=first?'MUHAREBE BAŞLIYOR':'ARAÇ KAYBEDİLDİ';$('#sh').innerHTML=first?'ARAÇ<br><span>SEÇ</span>':'YENİDEN<br><span>DOĞ</span>';spawnCards();screens('spawn');if(document.pointerLockElement)document.exitPointerLock()}
-$('#sgo').onclick=()=>{if(!sSel||!doSpawn(sSel))return;G.deadShown=0;screens(null);lockOrFs()};$('#sleave').onclick=()=>endBattle(G.tick.blue>G.tick.red+100?'win':'lose');
-function endBattle(r){G.result=r;G.state='end';G.deadShown=0;paused=0;screens('end');if(document.pointerLockElement)document.exitPointerLock();AU.engine('turbine',0,0,0,false);
-const me=[...TANKS,...PLANES].filter(t=>t.name==='Sen'),sum=k=>me.reduce((s,t)=>s+t.stats[k],0),P=PF.p,sc=sum('score'),rp=Math.round(sc*5+(r==='win'?1500:400)+sum('k')*250),sl=Math.round(sc*11+(r==='win'?7000:2500)),xp=Math.round(sc*2+(r==='win'?600:200)),lv0=lvlOf(P.xp);
+$('#sgo').onclick=()=>{if(!sSel)return;if(NET.cl){csend({t:'spawn',k:sSel});G.deadShown=0;G.deathT=0;screens(null);lockOrFs();return}if(!doSpawn(sSel))return;G.deadShown=0;screens(null);lockOrFs()};$('#sleave').onclick=()=>endBattle(G.tick.blue>G.tick.red+100?'win':'lose');
+function endBattle(r){if(NET.host&&G.mp)netEnd(r);G.result=r;G.state='end';G.deadShown=0;paused=0;screens('end');if(document.pointerLockElement)document.exitPointerLock();AU.engine('turbine',0,0,0,false);
+const me=[...TANKS,...PLANES].filter(t=>t.name==='Sen'||t.mine),sum=k=>me.reduce((s,t)=>s+t.stats[k],0),P=PF.p,sc=sum('score'),rp=Math.round(sc*5+(r==='win'?1500:400)+sum('k')*250),sl=Math.round(sc*11+(r==='win'?7000:2500)),xp=Math.round(sc*2+(r==='win'?600:200)),lv0=lvlOf(P.xp);
 P.rp+=rp;P.sl+=sl;P.xp+=xp;P.battles++;if(r==='win')P.wins++;PF.save();const lvUp=lvlOf(P.xp)>lv0;
 $('#eeb').textContent=r==='win'?'MUHAREBE KAZANILDI':'MUHAREBE KAYBEDİLDİ';$('#eh').innerHTML=r==='win'?'ZAFER<br><span>CEPHE BİZİM</span>':'MAĞLUBİYET<br><span>GERİ ÇEKİL</span>';
 $('#etx').textContent=r==='win'?'Düşmanın biletleri tükendi ya da zırhlı birlikleri imha edildi.':'Takımımızın biletleri tükendi ya da kadronda araç kalmadı.';
@@ -1358,13 +1359,13 @@ const r=fly(p,dt,D);G.stall=r.L<.98;if(mouseF||touchF)planeGun(p);if(K.r||K.e||r
 const gy=hAt(p.p.x,p.p.z);G.pull=p.fwd.y<-.04&&(p.p.y-gy)/(-p.fwd.y*p.V)<4.5;if((G.pull||G.stall)&&clock.t-(G.pw||0)>.7){G.pw=clock.t;AU.S.warn()}}
 function update(dt){const p=G.player;G.time-=dt;G.bt+=dt;
 if(p&&p.alive&&!p.air)ctlTank(p,dt);
-for(const t of TANKS){if(t.alive&&t.ai)aiTick(t,dt);ammoTick(t,dt);if(t.alive){drive(t,dt);collide(t)}place(t,dt);tankTick(t,dt)}
-for(let i=TANKS.length-1;i>=0;i--){const t=TANKS[i];if(t.alive||!t.ai)continue;if(!t.respQ){t.respQ=1;const L=t.lives==null?4:t.lives;if(L>0)RESP.push({team:t.team,type:Math.random()<.5?t.vk:pick(mmPool()),name:t.name,lives:L-1,at:clock.t+RV(10,18)})}
+for(const t of TANKS){if(t.alive&&t.ai)aiTick(t,dt);else if(t.alive&&t.pl)rcTank(t,dt);ammoTick(t,dt);if(t.alive){drive(t,dt);collide(t)}place(t,dt);tankTick(t,dt)}
+for(let i=TANKS.length-1;i>=0;i--){const t=TANKS[i];if(t.alive||!(t.ai||t.pl))continue;if(!t.respQ&&t.ai){t.respQ=1;const L=t.lives==null?4:t.lives;if(L>0)RESP.push({team:t.team,type:Math.random()<.5?t.vk:pick(mmPool()),name:t.name,lives:L-1,at:clock.t+RV(10,18)})}
 if(t.deadT>75){scene.remove(t.g);if(t.turret.parent===scene)scene.remove(t.turret);t.ms.all.forEach(m=>m.dispose());TANKS.splice(i,1)}}
 for(let i=RESP.length-1;i>=0;i--){const r=RESP[i];if(clock.t<r.at)continue;RESP.splice(i,1);if(r.air){spawnFighter(r.team,r.type,r.name,r.lives);continue}const sp=SPAWN[r.team],n=addTank(r.type,r.team,r.name,sp.x+RV(-45,45),sp.z+RV(-6,6),sp.h,0);n.lives=r.lives}
-for(const pl of PLANES.slice()){if(pl.dead)continue;if(pl.alive&&pl===p)ctlPlane(pl,dt);else if(pl.alive&&pl.ai)(pl.ai.f?aiFighter:aiPlane)(pl,dt);else if(!pl.alive)fly(pl,dt,null);if(!pl.dead)planeTick(pl,dt)}
+for(const pl of PLANES.slice()){if(pl.dead)continue;if(pl.alive&&pl===p)ctlPlane(pl,dt);else if(pl.alive&&pl.pl)rcPlane(pl,dt);else if(pl.alive&&pl.ai)(pl.ai.f?aiFighter:aiPlane)(pl,dt);else if(!pl.alive)fly(pl,dt,null);if(!pl.dead)planeTick(pl,dt)}
 for(let i=PLANES.length-1;i>=0;i--){const q=PLANES[i];if(!q.dead||q===p)continue;if(G.air&&q.ai&&q.ai.f&&q.lives>0)RESP.push({air:1,team:q.team,type:q.vk,name:q.name,lives:q.lives-1,at:clock.t+RV(6,11)});PLANES.splice(i,1)}
-if(!G.air){TSP.red+=dt*1.1;TSP.blue+=dt*.7;for(const tm of['blue','red'])if(G.bt>45&&TSP[tm]>=450&&!PLANES.some(q=>q.team===tm&&q.ai&&!q.dead)){TSP[tm]-=450;spawnAIPlane(tm)}}
+if(!G.air&&!G.noAir){TSP.red+=dt*1.1;TSP.blue+=dt*.7;for(const tm of['blue','red'])if(G.bt>45&&TSP[tm]>=450&&!PLANES.some(q=>q.team===tm&&q.ai&&!q.dead)){TSP[tm]-=450;spawnAIPlane(tm)}}
 spotT-=dt;if(spotT<=0){spotT=.3;if(p&&p.alive){const ey=p.air?p.y:p.y+2.9;for(const e of TANKS)if(e.alive&&e.team==='red'&&Math.hypot(e.x-p.x,e.z-p.z)<(p.air?2200:1400)&&losClear(p.x,ey,p.z,e.x,e.y+1.7,e.z))e.spot=clock.t}
 for(const e of PLANES)if(e.alive&&e.team==='red'&&([...TANKS].some(u=>u.alive&&u.team==='blue'&&e.p.distanceTo(u.g.position)<2600)||(p&&p.alive&&p.air)))e.spot=clock.t}
 updShells(dt);updBombs(dt);updDebris(dt);updFall(dt);if(!G.air)updCaps(dt);
@@ -1372,7 +1373,7 @@ if(p&&!p.alive){G.deathT+=dt;if(G.deathT>3.2&&!G.deadShown&&!G.result)showSpawn(
 if(G.marker)G.marker.t-=dt;for(let i=MSG.length-1;i>=0;i--)if((MSG[i].t-=dt)<=0)MSG.splice(i,1);for(let i=FEED.length-1;i>=0;i--)if((FEED[i].t-=dt)<=0)FEED.splice(i,1);
 for(let i=IND.length-1;i>=0;i--)if((IND[i].t-=dt)<=0)IND.splice(i,1);
 if(p&&p.alive){if(p.air)AU.engine(p.D.prop?'diesel':'jet',cl(p.thr,0,1.1),p.thr,0,true);else{const sp=Math.abs(p.sp)/p.D.vmax,ld=Math.abs(p.thr);AU.engine(p.D.eng,cl(.18+sp*.7+ld*.2,0,1),ld,p.sp,true)}}else AU.engine('turbine',0,0,0,false);
-checkEnd()}
+if(NET.host)netHostTick(dt);checkEnd()}
 function common(dt){if(GRASS){GRASS.m.uniforms.camP.value.copy(cam.position);GRASS.mesh.visible=G.state!=='menu'&&cam.position.y-hAt(cam.position.x,cam.position.z)<70}WATER.nt.offset.set(clock.t*.012,clock.t*.007);UT.value=clock.t;skyU.time.value=clock.t;ADD.update(dt,0,0);SMK.update(dt,WIND.x,WIND.z);MARK.flush();flashT=Math.max(0,flashT-dt*7);flash.intensity=flashT*(Q.post?40:6);
 for(const c of CAPS)c.flag.rotation.y=Math.sin(clock.t*1.3+c.x)*.25;if(G.state==='menu')hangarTick(dt)}
 
@@ -1383,14 +1384,175 @@ addEventListener('resize',resize);resize();
 function draw(){const hg=G.state==='menu',sc=hg?HS:scene,cm=hg?HCAM:cam;if(POST){POST.comp.uniforms.hurt.value=G.hurt*.5;POST.comp.uniforms.scope.value=cs.sight&&G.player&&G.player.alive&&!G.player.air?1:0;POST.render(sc,cm)}else R.render(sc,cm);hud()}
 let last=0,acc=0,fr=0;
 function frame(now){requestAnimationFrame(frame);if(window.__CChalt)return;const raw=(now-last)/1000||0,dt=Math.min(raw,.05);last=now;
-if(!paused){clock.t+=dt;if(G.state==='play')update(dt);else if(G.state==='end'){for(const t of TANKS){place(t,dt);tankTick(t,dt)}updShells(dt);updDebris(dt)}common(dt)}
+if(!paused||NET.on){clock.t+=dt;if(G.state==='play')(NET.cl?clientUpdate:update)(dt);else if(G.state==='end'){for(const t of TANKS){place(t,dt);tankTick(t,dt)}updShells(dt);updDebris(dt)}common(dt)}
 view(dt);draw();if(G.state==='play'&&!paused){acc+=raw;if(++fr>=150){if(acc/fr>.034&&PR>.75){PR=Math.max(.75,PR-.2);resize()}acc=fr=0}}}
 screens('load');
-loadAssets(f=>{$('#lbar').style.width=(f*100|0)+'%';$('#ltxt').textContent=`Hangar hazırlanıyor… %${f*100|0}`}).then(()=>{try{makeThumbs()}catch(e){console.warn(e)}G.state='menu';showMenu()})
+loadAssets(f=>{$('#lbar').style.width=(f*100|0)+'%';$('#ltxt').textContent=`Hangar hazırlanıyor… %${f*100|0}`}).then(()=>{try{makeThumbs()}catch(e){console.warn(e)}G.state='menu';showMenu();{const m=location.search.match(/[?&]oda=([A-Za-z0-9]{4})/);if(m)mpOpen(m[1].toUpperCase())}})
 .catch(e=>{console.error(e);$('#ltxt').textContent='Yükleme hatası ('+e.message+'). Oyunu GitHub Pages veya yerel bir sunucu üzerinden aç (dosyaya çift tıklayarak file:// ile açılmaz).'});
 requestAnimationFrame(frame);
-window.__CC={HS,HCAM,HV,G,TANKS,PLANES,cs,AIM,K,CAPS,clock,SHELLS,TSP,hAt,losClear,startBattle,doSpawn,spawnAIPlane,showMenu,
-sim(n,dt=.05){for(let i=0;i<n;i++){clock.t+=dt;if(G.state==='play')update(dt);common(dt);view(dt)}return G.state},
+/* ---------- Çok oyunculu: oda kurucunun tarayıcısı sunucudur (Rocket Arena ile aynı mantık) ----------
+   Misafirler yalnızca kontrollerini gönderir; ev sahibi tüm simülasyonu çalıştırır ve 15 Hz anlık görüntü yayınlar.
+   TURN: farklı evlerden bağlanırken doğrudan bağlantı kurulamazsa https://www.expressturn.com ücretsiz hesabındaki
+   3 bilgiyi aşağıya yaz (Rocket Arena'da kullandığın bilgiler aynen çalışır). Bu bilgiler sitede görünür. */
+const TURN={server:'',username:'',password:''};
+const NET={on:0,host:0,cl:0,peer:null,conns:new Map(),players:[],mode:'ground',bots:1,code:'',ev:[],snaps:[],sendT:0,inT:0,nid:1,px:new Map(),cnt:{b:0,m:0,r:0,x:0,F:0,j:0},thr:.9,sel:0,off:null,flip:0,started:0,myPid:0,myUnit:-1};
+const RCA='ABCDEFGHJKMNPQRSTUVWXYZ23456789',PROTO=1,PFX='celik-cephe-',DUMMY={team:'x',isP:false,name:'',stats:{k:0,score:0},x:0,z:0};
+const r2=v=>Math.round(v*100)/100,r3=v=>Math.round(v*1000)/1000,flipT=t=>NET.flip?(t==='blue'?'red':t==='red'?'blue':t):t,TESTNET=/[?&]nettest=1/.test(location.search);
+function iceSrv(){const s=[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun.cloudflare.com:3478']}],h=(TURN.server||'').trim().replace(/^turns?:/i,'').replace(/\?.*$/,'');
+if(h&&TURN.username&&TURN.password){const hh=h.includes(':')?h:h+':3478';s.push({urls:[`turn:${hh}?transport=udp`,`turn:${hh}?transport=tcp`],username:TURN.username.trim(),credential:TURN.password.trim()})}return s}
+function loadPeer(){if(TESTNET)return Promise.resolve(null);return window.Peer?Promise.resolve(window.Peer):new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';s.onload=()=>res(window.Peer);s.onerror=()=>rej({type:'network'});document.head.appendChild(s)})}
+/* test bağlantısı: aynı tarayıcıdaki sekmeler arasında (?nettest=1) */
+function bcConn(bc,me,to){const L={};return{peer:to,on(e,f){(L[e]=L[e]||[]).push(f)},send(d){bc.postMessage({to,from:me,d})},close(){},_e(e,v){(L[e]||[]).forEach(f=>f(v))}}}
+const genCode=()=>Array.from({length:4},()=>RCA[Math.random()*RCA.length|0]).join(''),normCode=v=>{const c=String(v||'').toUpperCase().replace(/[\s_-]+/g,'');return c.length===4&&[...c].every(ch=>RCA.includes(ch))?c:null};
+const PE={'peer-unavailable':'Bu kodla açık bir oda bulunamadı. Kodu kontrol et; odayı kuranın oyun ekranı açık kalmalı.','unavailable-id':'Oda kodu alınamadı, tekrar dene.',network:'Eşleştirme servisine ulaşılamadı. İnternetini kontrol et.','browser-incompatible':'Bu tarayıcı WebRTC desteklemiyor. Safari veya Chrome kullan.'};
+const perr=e=>PE[e&&e.type]||('Bağlantı kurulamadı.'+(TURN.server?' Tekrar dene.':' Farklı ağlardaysanız (başka ev, mobil veri) TURN ayarı gerekebilir.'));
+const myName=()=>(($('#mpName')&&$('#mpName').value)||store.get('name','Komutan')).replace(/[<>]/g,'').slice(0,16)||'Komutan';
+function mpStatus(s,c){$('#mpSt').textContent=s;$('#mpSt').style.color=c||''}
+async function mpHost(){try{store.set('name',myName());const P=await loadPeer();mpStatus('Oda kuruluyor…');let code,pe=null;
+if(TESTNET){code=genCode();const bc=new BroadcastChannel('cc-'+code),cs2=new Map();bc.onmessage=e=>{const m=e.data;if(m.to!=='host')return;let c=cs2.get(m.from);if(!c){c=bcConn(bc,'host',m.from);cs2.set(m.from,c);hostConn(c)}c._e('data',m.d)};NET.bc=bc}
+else for(let i=0;;i++){code=genCode();try{pe=await new Promise((res,rej)=>{const p=new P(PFX+code,{debug:0,config:{iceServers:iceSrv()}});p.on('open',()=>res(p));p.on('error',e=>{p.destroy();rej(e)})});break}catch(e){if(e.type!=='unavailable-id'||i>4)throw e}}
+if(pe){pe.on('connection',c=>hostConn(c));pe.on('error',e=>mpStatus(perr(e),'#ff6a50'));pe.on('disconnected',()=>{try{pe.reconnect()}catch(_){}})}
+Object.assign(NET,{peer:pe,code,on:1,host:1,cl:0,started:0,players:[{id:0,name:myName(),team:'blue',host:1}]});mpStatus('Oda hazır. Kodu arkadaşlarına ver.','#7fe08a');mpLobby()}catch(e){mpStatus(perr(e),'#ff6a50')}}
+let PID=1;
+function hostConn(c){c.on('data',d=>hostData(c,d));c.on('close',()=>hostDrop(c));c.on('error',()=>hostDrop(c))}
+function hostData(c,d){if(!d||typeof d!=='object')return;let p=NET.conns.get(c);
+if(d.t==='hello'){if(p)return;if(d.v!==PROTO){c.send({t:'err',s:'Oyun sürümleri farklı — herkes sayfayı yenilesin.'});return}if(NET.players.length>=12){c.send({t:'err',s:'Oda dolu (en fazla 12 kişi).'});return}
+const nb=NET.players.filter(q=>q.team==='blue').length,nr=NET.players.length-nb;p={id:PID++,name:String(d.name||'Oyuncu').replace(/[<>]/g,'').slice(0,16)||'Oyuncu',team:nb<=nr?'blue':'red',line:(Array.isArray(d.line)?d.line:[]).filter(k=>typeof k==='string'&&UNIT(k)).slice(0,5),conn:c,rc:{c:{}},unit:null,dt:9};
+NET.conns.set(c,p);NET.players.push(p);c.send({t:'welcome',id:p.id,code:NET.code});mpLobby();if(NET.started){c.send({t:'start',mode:NET.mode});noteAll(p.name+' muharebeye katıldı','#d9d2b8')}return}
+if(!p)return;
+if(d.t==='team'&&!NET.started){p.team=p.team==='blue'?'red':'blue';mpLobby()}
+else if(d.t==='in'){const r=p.rc;r.th=+d.th||0;r.st=+d.st||0;r.f=!!d.f;r.rk=!!d.rk;if(Array.isArray(d.ap)&&d.ap.length===3)r.ap=d.ap.map(Number);if(Array.isArray(d.dv)&&d.dv.length===3)r.dv=d.dv.map(Number);if(Number.isInteger(d.sel))r.sel=d.sel;if(d.c&&typeof d.c==='object')r.c=d.c}
+else if(d.t==='spawn')hostSpawnRemote(p,String(d.k))}
+function hostDrop(c){const p=NET.conns.get(c);if(!p)return;NET.conns.delete(c);NET.players=NET.players.filter(q=>q!==p);if(p.unit&&p.unit.alive){if(p.unit.air){p.unit.alive=false;p.unit.dead=1;scene.remove(p.unit.g)}else destroyTank(p.unit,null,'crew')}noteAll(p.name+' ayrıldı','#d9d2b8');mpLobby()}
+function noteAll(s,c){note(s,c);if(NET.host)NET.ev.push(['nt',s,c||''])}
+function mpLobby(){if(!NET.host){mpUI();return}const L={t:'lobby',players:NET.players.map(q=>({id:q.id,name:q.name,team:q.team,host:!!q.host})),mode:NET.mode,bots:NET.bots,started:NET.started};NET.lob=L;for(const[c]of NET.conns)try{c.send(L)}catch(_){}mpUI()}
+function hostSpawnRemote(p,k){if(!NET.started||G.state!=='play'||!p.line.includes(k)||!UNIT(k)||(G.air?!AIR[k]:!!AIR[k])||(p.unit&&p.unit.alive))return;let u;
+if(AIR[k]){const s=AIRSP[p.team],pos=new T.Vector3(RV(-250,250),hAt(0,s.z)+(G.air?1100:s.y),s.z+RV(-60,60));u=makePlane(k,p.team,p.name,0,pos,new T.Vector3(0,0,p.team==='blue'?-1:1));u.V=AIR[k].prop?AIR[k].vmax*.85:165}
+else{const sp=SPAWN[p.team];u=addTank(k,p.team,p.name,sp.x+RV(-40,40),sp.z+RV(-6,6),sp.h,0);u.ai=null}
+u.pl=p;u.pid=p.id;u.rcc={...p.rc.c};u.nid=NET.nid++;p.unit=u;p.rc.f=false;p.rc.ap=null;p.rc.dv=null;try{p.conn.send({t:'you',id:u.nid})}catch(_){}}
+function rcTank(t,dt){const r=t.pl.rc,c=r.c||{},o=t.rcc;t.thr=cl(r.th||0,-1,1);t.str=cl(r.st||0,-1,1);if(r.ap)aimAt(t,dt,_c.fromArray(r.ap));
+if(Number.isInteger(r.sel)&&r.sel!==t.sel&&r.sel>=0&&r.sel<t.am.length){t.sel=r.sel;if(t.D.ammo[0].belt)t.swapT=.45}if(r.f)tryFire(t);
+if((c.r|0)>(o.r|0))quickReload(t);if((c.x|0)>(o.x|0)){if(t.repT>0)t.repT=0;else if(needsRepair(t)&&Math.abs(t.sp)<.7)t.repT=.001}if((c.F|0)>(o.F|0)&&t.fire&&!(t.extCd>0)){t.ext=1.8;t.extCd=14}
+if((c.j|0)>(o.j|0))destroyTank(t,null,'crew');t.rcc={...c}}
+function rcPlane(pl,dt){const r=pl.pl.rc,c=r.c||{},o=pl.rcc;pl.thr=cl(r.th==null?.9:r.th,.15,1.1);pl.man=cl(r.st||0,-1,1);let D=r.dv?_c.fromArray(r.dv):_c.copy(pl.fwd);if(!(D.lengthSq()>.01))D.copy(pl.fwd);D.normalize();
+if(Math.abs(pl.p.x)>1250||Math.abs(pl.p.z)>1250){D.set(-pl.p.x,.12,-pl.p.z).normalize()}fly(pl,dt,D);if(r.f)planeGun(pl);if(r.rk)planeRocket(pl);if((c.b|0)>(o.b|0))planeBomb(pl);if((c.m|0)>(o.m|0))planeMav(pl);
+if((c.j|0)>(o.j|0)){pl.alive=false;pl.dead=1;scene.remove(pl.g)}pl.rcc={...c}}
+function aref(t,a){if(t&&t.am){const i=t.am.indexOf(a);if(i>=0)return 't:'+t.vk+':'+i}if(t&&t.D&&a===t.D.gun)return 'g:'+t.vk;if(t&&t.D&&a===t.D.rk)return 'r:'+t.vk;if(a===MG81)return 'mg';return null}
+function aRes(r){const s=String(r).split(':');if(s[0]==='t')return VEH[s[1]]&&VEH[s[1]].ammo[+s[2]];if(s[0]==='g')return AIR[s[1]]&&AIR[s[1]].gun;if(s[0]==='r')return AIR[s[1]]&&AIR[s[1]].rk;if(s[0]==='mg')return MG81;return null}
+function netHostTick(dt){NET.sendT-=dt;if(NET.sendT>0||!NET.conns.size){if(!NET.conns.size)NET.ev=[];return}NET.sendT=1/15;NET.seq=(NET.seq||0)+1;const U=[];
+for(const t of TANKS){t.nid=t.nid||NET.nid++;U.push(['t',t.nid,t.vk,t.team,t.name,t.alive?1:0,t.fire?1:0,t.cause||'',r2(t.x),r2(t.y),r2(t.z),r3(t.h),r3(t.ya),r3(t.el),r2(t.sp),r2(t.travL),r2(t.travR),r2(t.rec),r2(t.towA)])}
+for(const p of PLANES){if(p.dead||!p.vk)continue;p.nid=p.nid||NET.nid++;U.push(['p',p.nid,p.vk,p.team,p.name,p.alive?1:0,p.falling?1:0,r2(p.p.x),r2(p.p.y),r2(p.p.z),r3(p.q.x),r3(p.q.y),r3(p.q.z),r3(p.q.w),r2(p.thr),r2(p.V)])}
+const B={t:'s',ts:Math.round(performance.now()),tk:[r2(G.tick.blue),r2(G.tick.red)],tm:Math.round(G.time),cp:CAPS.map(c=>[r2(c.v),c.owner==='blue'?1:c.owner==='red'?2:0]),u:U,m:SHELLS.filter(s=>s.a.atgm&&s.alive).map(s=>[r2(s.p.x),r2(s.p.y),r2(s.p.z)]),e:NET.ev};
+if(NET.seq%8===0)B.fd=FEED.map(f=>[f.a?f.a.name:'',f.a?f.a.D.short:'',f.a?f.a.team:'',f.v.name,f.v.D.short,f.v.team,f.how||'',r2(f.t)]);
+if(NET.seq%15===0)B.sb=[...TANKS,...PLANES].filter(u=>u.nid).map(u=>[u.nid,u.stats.k,u.stats.score]);NET.ev=[];
+for(const[c,pl]of NET.conns){const u=pl.unit;let me=null;if(u)me=u.air?{k:'p',hp:u.hp,g:u.gunN,r:u.rkN,b:u.bmN,m:u.mavN,fi:u.fire?1:0}:{k:'t',cr:u.crew.map(x=>[Math.round(x.hp),x.alive,x.moved?1:0]),md:u.mods.map(m=>Math.round(m.hp)),tk:[u.trk.L,u.trk.R],b:u.barrel,tw:u.towOk,fi:u.fire?1:0,rp:r2(u.repT),am:u.am.map(a=>[a.left,a.ready,r2(a.rlT||0),r2(a.rl0||1)]),sl:u.sel,ld:u.loaded,lg:u.loading,rl:r2(u.rl),r0:r2(u.rl0)};
+try{c.send(me?{...B,me}:B)}catch(_){}}}
+function netReport(R){const sp=R.sh&&R.sh.pl,vp=R.t&&R.t.pl,t=R.t;t.nid=t.nid||NET.nid++;
+if(sp&&sp.conn)try{sp.conn.send({t:'hit',n:t.nid,res:R.res,kill:R.kill?1:0,ck:R.crewK,zone:R.zone,pen:Math.round(R.pen),eff:Math.round(R.eff||0),ang:Math.round(R.ang),it:R.items.slice(0,6).map(i=>[i[0],+(+i[1]).toFixed(2),i[2]?1:0]),
+cr:t.crew.map(c=>[Math.round(c.hp),c.alive,c.moved?1:0]),md:t.mods.map(m=>Math.round(m.hp)),tk:[t.trk.L,t.trk.R],b:t.barrel,ya:r3(t.ya),ep:R.ep?R.ep.toArray():null,ed:R.ed?R.ed.toArray():null,sl:R.am.spall[3]})}catch(_){}
+if(vp&&vp.conn)try{vp.conn.send({t:'hurt',x:r2(R.sh.x),z:r2(R.sh.z),res:R.res,it:R.items.filter(i=>i[2]&&i[1]<=0).map(i=>i[0])})}catch(_){}}
+const toP=(p,m)=>{if(p&&p.conn)try{p.conn.send(m)}catch(_){}};
+function netEnd(r){for(const[c,p]of NET.conns){const us=[...TANKS,...PLANES].filter(u=>u.pid===p.id);try{c.send({t:'end',win:(r==='win')===(p.team==='blue')?1:0,k:us.reduce((s,u)=>s+u.stats.k,0),sc:us.reduce((s,u)=>s+u.stats.score,0),h:us.reduce((s,u)=>s+(u.stats.hits||0),0)})}catch(_){}}NET.started=0;mpLobby()}
+function mpStart(){if(!NET.host)return;const air=NET.mode==='air';NET.started=1;clearBattle();CAPS.forEach(c=>{c.v=0;c.owner='none'});
+Object.assign(G,{mp:1,air:air?1:0,noAir:1,tick:air?{blue:400,red:400}:{blue:700,red:700},time:air?900:1080,used:{},result:null,deathT:0,deadShown:0,bound:0,player:null,sp:0,first:1,bt:0});TSP.blue=TSP.red=0;capVis(!air);
+LINE=PF.p.line.filter(k=>k&&PF.p.own[k]&&(air?AIR[k]:!AIR[k]));for(const p of NET.players){p.unit=null}
+if(NET.bots){const nb=NET.players.filter(p=>p.team==='blue').length,nr=NET.players.length-nb,n=Math.max(nb,nr,5);
+if(air){const pool=airPool();for(let i=nb;i<n;i++)spawnFighter('blue',pick(pool),NAMES.blue[i%5]+' (bot)');for(let i=nr;i<n;i++)spawnFighter('red',pick(pool),NAMES.red[i%5]+' (bot)')}
+else{const pool=mmPool();for(let i=nb;i<n;i++)addTank(pick(pool),'blue',NAMES.blue[i%5]+' (bot)',SPAWN.blue.x+RV(-55,55),SPAWN.blue.z+RV(-6,6),SPAWN.blue.h,0);for(let i=nr;i<n;i++)addTank(pick(pool),'red',NAMES.red[i%5]+' (bot)',SPAWN.red.x+RV(-55,55),SPAWN.red.z+RV(-6,6),SPAWN.red.h,0)}}
+G.state='play';ov('mp',0);showSpawn(true);note(air?'UÇAK vs UÇAK — arkadaşlarınla it dalaşı!':'TANK vs TANK — noktaları tut!','#f2c14e');for(const[c]of NET.conns)try{c.send({t:'start',mode:NET.mode})}catch(_){};mpLobby()}
+/* ----- misafir ----- */
+async function mpJoin(codeIn){const code=normCode(codeIn||$('#mpCode').value);if(!code){mpStatus('Arkadaşının verdiği 4 karakterlik kodu yaz (0, O, 1, I, L kullanılmaz).','#ff6a50');return}
+try{store.set('name',myName());const P=await loadPeer();mpStatus('Bağlanıyor…');let c;
+if(TESTNET){const me='g'+Math.random().toString(36).slice(2,8),bc=new BroadcastChannel('cc-'+code);c=bcConn(bc,me,'host');bc.onmessage=e=>{if(e.data.to===me)c._e('data',e.data.d)};NET.bc=bc;setTimeout(()=>c._e('open'),50)}
+else{const pe=new P(undefined,{debug:0,config:{iceServers:iceSrv()}});NET.peer=pe;await new Promise((res,rej)=>{pe.on('open',res);pe.on('error',rej)});c=pe.connect(PFX+code,{reliable:true,serialization:'json'});pe.on('error',e=>mpStatus(perr(e),'#ff6a50'))}
+NET.hc=c;const to=setTimeout(()=>{if(!NET.on)mpStatus('Oda yanıt vermedi. Kodu ve odayı kuranın ekranının açık olduğunu kontrol et.','#ff6a50')},15000);
+c.on('open',()=>{clearTimeout(to);Object.assign(NET,{on:1,cl:1,host:0,code});c.send({t:'hello',v:PROTO,name:myName(),line:PF.p.line.filter(k=>k&&PF.p.own[k])});mpStatus('Bağlandı — odayı kuranın başlatmasını bekle.','#7fe08a')});
+c.on('data',clientData);c.on('close',clientLost);c.on('error',clientLost)}catch(e){mpStatus(perr(e),'#ff6a50')}}
+function csend(m){try{NET.hc&&NET.hc.send(m)}catch(_){}}
+function clientLost(){if(!NET.cl)return;Object.assign(NET,{on:0,cl:0});note('Oda bağlantısı koptu','#ff6a50');showMenu();ov('mp',1);mpStatus('Odayla bağlantı koptu. Odayı kuran oyundan çıkmış olabilir.','#ff6a50');mpUI()}
+function clientData(d){if(!d||typeof d!=='object')return;
+if(d.t==='welcome')NET.myPid=d.id;
+else if(d.t==='lobby'){NET.lob=d;const me=d.players.find(p=>p.id===NET.myPid);NET.flip=me&&me.team==='red'?1:0;mpUI()}
+else if(d.t==='err')mpStatus(d.s,'#ff6a50');
+else if(d.t==='start')clientStart(d.mode);
+else if(d.t==='s'){if(G.state!=='play'||!G.mp)return;const now=performance.now();const o=now-d.ts;NET.off=NET.off==null?o:Math.min(o,NET.off+.5);d.map=new Map(d.u.map(e=>[e[1],e]));NET.snaps.push({ts:d.ts,d});if(NET.snaps.length>40)NET.snaps.shift()}
+else if(d.t==='you')NET.myUnit=d.id;
+else if(d.t==='hit')clientHit(d);
+else if(d.t==='hurt'){G.hurt=Math.max(G.hurt,d.res==='pen'?1:.35);G.shake=Math.max(G.shake,d.res==='pen'?.8:.4);IND.push({x:d.x,z:d.z,t:2.2});if(d.res==='pen'){VOICE.say('Vurulduk!',1);note(d.it&&d.it.length?d.it.join(', ')+' öldü':'Zırh delindi!','#ff6a50')}else if(d.res==='ric')note('Sekme!','#d9d2b8');else if(d.res==='nopen')note('Zırh delinmedi','#d9d2b8')}
+else if(d.t==='mk'){G.marker={s:d.s,c:d.c||'#f2c14e',t:2};if(d.v)VOICE.say(d.v,1)}
+else if(d.t==='nt')note(d.s,d.c);
+else if(d.t==='end')clientEnd(d)}
+function clientStart(mode){clearBattle();NET.snaps=[];NET.px.clear();NET.myUnit=-1;NET.off=null;CAPS.forEach(c=>{c.v=0;c.owner='none'});
+Object.assign(G,{mp:1,air:mode==='air'?1:0,noAir:1,tick:{blue:0,red:0},result:null,deathT:0,deadShown:0,player:null,sp:0,first:1});capVis(!G.air);LINE=PF.p.line.filter(k=>k&&PF.p.own[k]&&(G.air?AIR[k]:!AIR[k]));
+G.state='play';['tree','opts','pick','mp'].forEach(k=>ov(k,0));showSpawn(true);note(G.air?'UÇAK vs UÇAK':'TANK vs TANK','#f2c14e')}
+function dropProxy(u){scene.remove(u.g);if(u.turret&&u.turret.parent===scene)scene.remove(u.turret);if(u.ms)u.ms.all.forEach(m=>m.dispose());let i=TANKS.indexOf(u);if(i>=0)TANKS.splice(i,1);i=PLANES.indexOf(u);if(i>=0)PLANES.splice(i,1);NET.px.delete(u.nid);if(G.player===u&&u.nid!==NET.myUnit)G.player=null}
+function clientKill(t,cause){t.alive=false;t.burn=RV(45,80);t.cause=cause;t.ms.all.forEach(m=>{m.color.setRGB(.12,.11,.1);m.envMapIntensity=.25});const p=t.g.position;boom(p.x,p.y+1.6,p.z,cause==='ammo'?2.3:1.2,1);AU.S.boom(p,cause==='ammo'?1.4:.9);
+if(cause==='ammo'){scene.attach(t.turret);DEBRIS.push({o:t.turret,v:new T.Vector3(RV(-4,4),RV(10,16),RV(-4,4)),w:new T.Vector3(RV(-2.5,2.5),RV(-1.5,1.5),RV(-2.5,2.5))})}}
+const _sq=new T.Quaternion(),_sq2=new T.Quaternion();
+function applySnap(A,B,f,dt){const seen=new Set();
+for(const e of B.d.u){const id=e[1];seen.add(id);let u=NET.px.get(id);const team=flipT(e[3]);
+if(u&&u.vk!==e[2]){dropProxy(u);u=null}
+if(!u){if(e[0]==='t'){u=makeTank(e[2],team,e[4],0);TANKS.push(u);u.x=e[8];u.z=e[10];u.h=e[11];if(!e[5])clientKill(u,e[7])}else{if(!e[5])continue;u=makePlane(e[2],team,e[4],0,new T.Vector3(e[7],e[8],e[9]),new T.Vector3(0,0,1))}u.nid=id;u.px=1;NET.px.set(id,u)}
+if(id===NET.myUnit&&G.player!==u){if(G.player)G.player.isP=false;u.isP=true;G.player=u;G.deadShown=0;G.deathT=0;cs.sight=0;cs.yaw=u.air?Math.atan2(u.fwd.x,u.fwd.z):u.h;cs.pitch=u.air?-.06:.05;cs.dist=u.air?(u.D.prop?14:20):13;screens(null)}
+const a=A.d.map.get(id)||e,L=(i)=>lp(a[i],e[i],f),LA=(i)=>a[i]+wr(e[i]-a[i])*f;
+if(e[0]==='t'){if(u.alive&&!e[5]){clientKill(u,e[7]);if(u===G.player){G.deathT=0;cs.sight=0;VOICE.say('Araç kaybedildi!',1)}}u.fire=e[6];
+u.x=L(8);u.y=L(9);u.z=L(10);u.h=LA(11);u.ya=LA(12);u.el=L(13);const sp=L(14);u.ax=dt?lp(u.ax||0,(sp-(u.sp||0))/dt,.2):0;u.sp=sp;u.travL=L(15);u.travR=L(16);u.rec=Math.max(u.rec*.9,e[17]);u.towA=L(18);place(u,dt);if(u.tow){u.tow.rotation.x=-u.towA*.3;u.tow.position.y=u.tow.userData.y0+u.towA*.34}}
+else{if(u.alive&&!e[5]){boom(u.p.x,u.p.y,u.p.z,.9,1);AU.S.boom(u.p,.8);if(u===G.player){G.deathT=0}}u.alive=!!e[5];u.falling=e[6];u.p.set(L(7),L(8),L(9));_sq.set(a[10],a[11],a[12],a[13]);_sq2.set(e[10],e[11],e[12],e[13]);u.q.copy(_sq).slerp(_sq2,f);
+u.thr=e[14];u.V=L(15);u.x=u.p.x;u.y=u.p.y;u.z=u.p.z;u.fwd.set(0,0,1).applyQuaternion(u.q);u.h=Math.atan2(u.fwd.x,u.fwd.z);u.sp=u.V;u.g.position.copy(u.p);u.g.quaternion.copy(u.q)}}
+for(const[id,u]of[...NET.px])if(!seen.has(id))dropProxy(u);
+const d=B.d,P=G.player;G.tick=NET.flip?{blue:d.tk[1],red:d.tk[0]}:{blue:d.tk[0],red:d.tk[1]};G.time=d.tm;
+d.cp.forEach(([v,o],i)=>{const c=CAPS[i];let own=o===1?'blue':o===2?'red':'none';if(NET.flip){v=-v;own=flipT(own)}if(own!==c.owner&&c.owner!==undefined){if(own==='blue')note(`${c.id} NOKTASI ELE GEÇİRİLDİ`,'#5fb0ff');else if(own==='red')note(`${c.id} NOKTASI DÜŞMANA GEÇTİ`,'#ff5a4a')}c.v=v;c.owner=own;
+const col=TEAMC[own];c.mat.color.copy(col);c.flagM.color.copy(col);c.flag.position.y=lp(c.flag.position.y,c.fy+3.2+6.6*Math.abs(v),.1)});
+NET.mis=d.m;if(d.me&&P&&P.nid===NET.myUnit){const m=d.me;if(m.k==='t'&&!P.air){m.cr.forEach((c,i)=>{const q=P.crew[i];if(q){q.hp=c[0];q.alive=c[1];q.moved=c[2]}});m.md.forEach((h,i)=>{if(P.mods[i])P.mods[i].hp=h});P.trk.L=m.tk[0];P.trk.R=m.tk[1];P.barrel=m.b;P.towOk=m.tw;P.fire=m.fi;P.repT=m.rp;
+m.am.forEach((x,i)=>{const q=P.am[i];if(q){q.left=x[0];q.ready=x[1];q.rlT=x[2];q.rl0=x[3]}});P.sel=m.sl;P.loaded=m.ld;P.loading=m.lg;P.rl=m.rl;P.rl0=m.r0}
+else if(m.k==='p'&&P.air){Object.assign(P.hp,m.hp);P.gunN=m.g;P.rkN=m.r;P.bmN=m.b;P.mavN=m.m;P.fire=m.fi}}}
+function procEv(E){for(const v of E){const k=v[0];
+if(k==='sh'){const a=aRes(v[2]);if(!a)continue;const o=NET.px.get(v[1]),p=new T.Vector3(v[3],v[4],v[5]),vel=new T.Vector3(v[6],v[7],v[8]),d=vel.clone().normalize(),s=spawnShell(o||DUMMY,a,p,d);s.v.copy(vel);s.ign=o||null;s.ignT=.25;s.life=4;
+if(o&&!o.air){o.rec=1;const big=a.cal>100;muzzleFx(p,d,big,'');if(big)AU.S.cannon(p,true);else AU.S.auto(p)}else if(o&&Math.random()<.4)AU.S.auto(p)}
+else if(k==='kn'){const o=OB[v[1]];if(o)knock(o,v[2],v[3])}else if(k==='wl'){const o=OB[v[1]];if(o&&o.alive)breakWall(o)}
+else if(k==='bm'){const m=new T.Mesh(bombGeo,MAT.pole);scene.add(m);BOMBS.push({p:new T.Vector3(v[1],v[2],v[3]),v:new T.Vector3(v[4],v[5],v[6]),mesh:m,team:'x',owner:DUMMY})}
+else if(k==='cr'){boom(v[1],v[2],v[3],2.4,1);dustAt(v[1],v[2],v[3],10,3);AU.S.boom({x:v[1],y:v[2],z:v[3]},1.3)}else if(k==='nt')note(v[1],v[2]||undefined)}}
+function clientHit(d){const t=NET.px.get(d.n),M={ric:['SEKME','#d9d2b8'],nopen:['DELİNMEDİ','#d9d2b8'],pen:['DELİNDİ','#f2c14e'],track:['PALET HASARI','#f2c14e'],barrel:['DIŞ MODÜL HASARI','#f2c14e']}[d.res];
+if(d.kill){G.marker={s:'HEDEF İMHA EDİLDİ',c:'#ff5a4a',t:2.6};VOICE.say('Hedef imha edildi!',1)}else if(M){G.marker={s:d.res==='pen'&&d.ck?'KRİTİK HASAR':M[0],c:M[1],t:2};VOICE.say({ric:'Sekti!',nopen:'Delemedi!',pen:d.ck?'Kritik isabet!':'Delindi!',track:'Paleti koptu!',barrel:'Topu hasarlı!'}[d.res]||'İsabet!')}
+if(t&&!t.air&&t.D.crew)G.hitcam={sh:G.player,t,zone:d.zone,ang:d.ang,pen:d.pen,eff:d.eff,res:d.res,items:d.it,crewK:d.ck,kill:d.kill,ep:d.ep&&new T.Vector3().fromArray(d.ep),ed:d.ed&&new T.Vector3().fromArray(d.ed),am:{spall:[0,0,0,d.sl||0]},time:clock.t,
+crew:t.D.crew.map((c,i)=>({...c,hp:d.cr[i]?d.cr[i][0]:100,alive:d.cr[i]?d.cr[i][1]:1,moved:d.cr[i]?d.cr[i][2]:0})),mods:t.D.mods.map((m,i)=>({...m,hp:d.md[i]==null?m.hp:d.md[i],max:m.hp})),trk:{L:d.tk[0],R:d.tk[1]},barrel:d.b,ya:d.ya}}
+function clientEnd(d){const r=d.win?'win':'lose';G.result=r;G.state='end';G.deadShown=0;screens('end');if(document.pointerLockElement)document.exitPointerLock();AU.engine('turbine',0,0,0,false);
+const P=PF.p,sc=d.sc|0,rp=Math.round(sc*5+(d.win?1500:400)+(d.k|0)*250),sl=Math.round(sc*11+(d.win?7000:2500));P.rp+=rp;P.sl+=sl;P.xp+=Math.round(sc*2+(d.win?600:200));P.battles++;if(d.win)P.wins++;PF.save();
+$('#eeb').textContent=d.win?'MUHAREBE KAZANILDI':'MUHAREBE KAYBEDİLDİ';$('#eh').innerHTML=d.win?'ZAFER<br><span>CEPHE BİZİM</span>':'MAĞLUBİYET<br><span>GERİ ÇEKİL</span>';$('#etx').textContent='Arkadaş muharebesi bitti. Odayı kuran yeni muharebe başlatabilir.';
+$('#est').innerHTML=[['İmha',d.k|0],['Delici isabet',d.h|0],['Puan',sc],['Kazanılan araştırma','+'+fmt(rp)+' RP'],['Kazanılan gümüş','+'+fmt(sl)+' SL']].map(([a,b])=>`<span>${a}</span><span>${b}</span>`).join('')}
+function clientUpdate(dt){const now=performance.now();G.time-=dt;const S=NET.snaps;
+if(S.length&&NET.off!=null){const rt=now-NET.off-140;let i=S.length-1;while(i>0&&S[i].ts>rt)i--;const A=S[i],B=S[Math.min(i+1,S.length-1)],f=B===A?1:cl((rt-A.ts)/(B.ts-A.ts),0,1);
+for(const sn of S)if(!sn.done&&sn.ts<=rt+70){sn.done=1;procEv(sn.d.e||[]);
+if(sn.d.fd){FEED.length=0;for(const x of sn.d.fd)FEED.push({a:x[0]?{name:x[0],D:{short:x[1]},team:flipT(x[2])}:null,v:{name:x[3],D:{short:x[4]},team:flipT(x[5])},how:x[6],t:x[7]})}
+if(sn.d.sb)for(const[id,k,sc]of sn.d.sb){const u=NET.px.get(id);if(u){u.stats.k=k;u.stats.score=sc}}}
+applySnap(A,B,f,dt);while(S.length>3&&S[1].ts<rt-400)S.shift()}
+for(const t of TANKS)tankTick(t,dt);for(const pl of PLANES)planeTick(pl,dt);updShells(dt);updBombs(dt);updDebris(dt);updFall(dt);
+NET.mm=NET.mm||[];const MS=NET.mis||[];while(NET.mm.length<MS.length){const m=new T.Mesh(misG,misM);scene.add(m);NET.mm.push(m)}NET.mm.forEach((m,i)=>{m.visible=i<MS.length;if(i<MS.length){m.position.set(MS[i][0],MS[i][1],MS[i][2]);if(Math.random()<dt*30)fxP(SMK,MS[i][0],MS[i][1],MS[i][2],0,0,0,RV(1.5,3),.35,2.2,[.66,.65,.62],.35,-.1,1.5)}});
+const p=G.player,kd=k=>K[k]?1:0;
+if(p&&p.alive&&p.nid===NET.myUnit&&!paused){if(p.air){NET.thr=cl(NET.thr+(kd('w')-kd('s')+(touchUI?js.y:0))*dt*.55,.15,1.1);cs.yaw+=(kd('arrowleft')-kd('arrowright'))*dt*1.2;cs.pitch=cl(cs.pitch+(kd('arrowup')-kd('arrowdown'))*dt*.9,-1.45,1.45);
+const gy=hAt(p.p.x,p.p.z);G.pull=p.fwd.y<-.04&&(p.p.y-gy)/(-p.fwd.y*p.V)<4.5;G.stall=p.V<p.D.vstall*1.05;if((G.pull||G.stall)&&clock.t-(G.pw||0)>.7){G.pw=clock.t;AU.S.warn()}p.alt=p.p.y-gy}
+else{cs.yaw+=(kd('arrowleft')-kd('arrowright'))*dt*1.4/zoomOf();cs.pitch=cl(cs.pitch+(kd('arrowup')-kd('arrowdown'))*dt*.8/zoomOf(),-.5,.9)}
+NET.inT-=dt;if(NET.inT<=0){NET.inT=.05;csend(p.air?{t:'in',th:r2(NET.thr),st:cl(kd('d')-kd('a')+(touchUI?js.x:0),-1,1),dv:[r3(VD.x),r3(VD.y),r3(VD.z)],f:mouseF||touchF?1:0,rk:K.r||K.e||rocketF?1:0,c:NET.cnt}
+:{t:'in',th:cl(kd('w')-kd('s')+js.y,-1,1),st:cl(kd('d')-kd('a')+js.x,-1,1),ap:[r2(AIM.p.x),r2(AIM.p.y),r2(AIM.p.z)],f:K[' ']||mouseF||touchF?1:0,sel:p.sel,c:NET.cnt})}
+if(p.air)AU.engine(p.D.prop?'diesel':'jet',cl(p.thr,0,1.1),p.thr,0,true);else{const ld=Math.abs(kd('w')-kd('s')+js.y);AU.engine(p.D.eng,cl(.18+Math.abs(p.sp)/p.D.vmax*.7+ld*.2,0,1),ld,p.sp,true)}}
+else AU.engine('turbine',0,0,0,false);
+if(p&&!p.alive){G.deathT+=dt;if(G.deathT>3.2&&!G.deadShown&&!G.result)showSpawn(false)}else if(!p&&!G.deadShown&&!G.result&&(G.deathT+=dt)>6)showSpawn(true);
+if(G.marker)G.marker.t-=dt;for(let i=MSG.length-1;i>=0;i--)if((MSG[i].t-=dt)<=0)MSG.splice(i,1);for(let i=FEED.length-1;i>=0;i--)if((FEED[i].t-=dt)<=0)FEED.splice(i,1);for(let i=IND.length-1;i>=0;i--)if((IND[i].t-=dt)<=0)IND.splice(i,1)}
+/* ----- lobi arayüzü ----- */
+function mpUI(){const L=NET.lob,inRoom=NET.on;$('#mpPre').style.display=inRoom?'none':'block';$('#mpRoom').style.display=inRoom?'block':'none';
+document.querySelectorAll('[data-mm]').forEach(b=>{b.classList.toggle('on',b.dataset.mm===(L?L.mode:NET.mode));b.disabled=inRoom&&!NET.host});document.querySelectorAll('[data-mb]').forEach(b=>{b.classList.toggle('on',+b.dataset.mb===(L?L.bots:NET.bots));b.disabled=inRoom&&!NET.host});
+if(!inRoom)return;$('#mpCodeShow').textContent=NET.code;$('#mpStartB').style.display=NET.host?'block':'none';$('#mpTeam').style.display=NET.host||(L&&L.started)?'none':'inline-block';
+const ps=L?L.players:[];$('#mpList').innerHTML=['blue','red'].map(tm=>`<div class="mpT ${tm}"><b>${tm==='blue'?'MAVİ TAKIM':'KIZIL TAKIM'} (${ps.filter(p=>p.team===tm).length})</b>`+ps.filter(p=>p.team===tm).map(p=>`<span>${p.host?'★ ':''}${p.name.replace(/[<>&]/g,'')}${p.id===NET.myPid&&!NET.host?' (sen)':''}</span>`).join('')+'</div>').join('');
+if(!NET.host&&L&&L.started&&G.state!=='play')mpStatus('Muharebe sürüyor — katılmak için bekle, sonraki başlangıçta otomatik girersin.','#d9d2b8')}
+function mpOpen(code){ov('mp',1);$('#mpName').value=store.get('name','Komutan');if(code)$('#mpCode').value=code;mpUI()}
+$('#hMp').onclick=()=>{AU.init();AU.resume();mpOpen()};$('#mpClose').onclick=()=>ov('mp',0);$('#mpHostB').onclick=()=>mpHost();$('#mpJoinB').onclick=()=>mpJoin();
+document.querySelectorAll('[data-mm]').forEach(b=>b.onclick=()=>{if(NET.on&&!NET.host)return;NET.mode=b.dataset.mm;mpLobby()});document.querySelectorAll('[data-mb]').forEach(b=>b.onclick=()=>{if(NET.on&&!NET.host)return;NET.bots=+b.dataset.mb;mpLobby()});
+$('#mpTeam').onclick=()=>csend({t:'team'});$('#mpStartB').onclick=()=>{AU.init();AU.resume();hangarShow(null);mpStart()};
+$('#mpLeave').onclick=()=>{try{NET.peer&&NET.peer.destroy()}catch(_){}try{NET.bc&&NET.bc.close()}catch(_){}NET.conns.clear();Object.assign(NET,{on:0,host:0,cl:0,started:0,lob:null,peer:null});mpStatus('Odadan ayrıldın.');mpUI()};
+$('#mpCopy').onclick=()=>{const u=location.origin+location.pathname+'?oda='+NET.code;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>mpStatus('Davet bağlantısı kopyalandı: '+u,'#7fe08a'),()=>mpStatus('Davet bağlantısı: '+u))};
+
+window.__CC={NET,HS,HCAM,HV,G,TANKS,PLANES,cs,AIM,K,CAPS,clock,SHELLS,TSP,hAt,losClear,startBattle,doSpawn,spawnAIPlane,showMenu,
+sim(n,dt=.05){for(let i=0;i<n;i++){clock.t+=dt;if(G.state==="play")(NET.cl?clientUpdate:update)(dt);common(dt);view(dt)}return G.state},
 opt(o){if("sh" in o)R.shadowMap.enabled=o.sh},compile(){view(0);R.compile(scene,cam);R.compile(HS,HCAM);return R.info.programs.length},
 snap(){view(0);draw();const c=document.createElement('canvas');c.width=glc.width;c.height=glc.height;const x=c.getContext('2d');x.drawImage(glc,0,0);x.drawImage(hc,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.88)}};
 })();
